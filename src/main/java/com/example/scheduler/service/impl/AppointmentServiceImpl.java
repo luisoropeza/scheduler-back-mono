@@ -38,21 +38,20 @@ public class AppointmentServiceImpl implements AppointmentService {
         if (role.equals(ERole.PATIENT.name()) && !request.getClientId().equals(userId))
             throw new BusinessException("A patient can only book appointments for themselves");
         Schedule schedule = getScheduleOrThrow(request.getScheduleId());
-        if (schedule.getStatus() != ScheduleStatus.AVAILABLE)
+        if (!ScheduleStatus.AVAILABLE.equals(schedule.getStatus()))
             throw new BusinessException("This schedule slot is no longer available");
         if (schedule.getStartTime().isBefore(LocalDateTime.now()))
             throw new BusinessException("Cannot book a past schedule slot");
-        Patient patient = patientRepository.findById(request.getClientId())
-                .orElseThrow(() -> new ResourceNotFoundException("Patient not found with id: " + request.getClientId()));
+        Patient patient = getPatientOrThrow(request.getClientId());
         schedule.setStatus(ScheduleStatus.BOOKED);
-        Appointment appointment = appointmentRepository.save(Appointment.builder()
+        Appointment appointment = Appointment.builder()
                 .schedule(schedule)
                 .patient(patient)
-                .build());
+                .build();
         if (role.equals(ERole.PATIENT.name())) {
             appointment.setStatus(AppointmentStatus.CONFIRMED);
         }
-        return appointmentMapper.toResponse(appointment);
+        return appointmentMapper.toResponse(appointmentRepository.save(appointment));
     }
 
     @Override
@@ -126,5 +125,10 @@ public class AppointmentServiceImpl implements AppointmentService {
     private Schedule getScheduleOrThrow(Long id) {
         return scheduleRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Schedule not found with id: " + id));
+    }
+
+    private Patient getPatientOrThrow(Long id) {
+        return patientRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Patient not found with id: " + id));
     }
 }
