@@ -4,7 +4,6 @@ import com.example.scheduler.dto.PatientRequest;
 import com.example.scheduler.dto.PatientResponse;
 import com.example.scheduler.dto.PersonalResponse;
 import com.example.scheduler.entity.Patient;
-import com.example.scheduler.enums.ERole;
 import com.example.scheduler.exception.BusinessException;
 import com.example.scheduler.exception.ResourceNotFoundException;
 import com.example.scheduler.mapper.PatientMapper;
