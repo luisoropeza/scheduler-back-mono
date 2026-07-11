@@ -7,7 +7,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
 public interface AppointmentService {
-    AppointmentResponse book(AppointmentRequest request, String role);
+    AppointmentResponse book(AppointmentRequest request, Long userId, String role);
     AppointmentResponse findById(Long id);
     Page<AppointmentResponse> findByClientId(Long clientId, Pageable pageable, Long userId, String role);
     Page<AppointmentResponse> findByDoctorAndStatus(Long doctorId, AppointmentStatus status, Pageable pageable, Long userId, String role);

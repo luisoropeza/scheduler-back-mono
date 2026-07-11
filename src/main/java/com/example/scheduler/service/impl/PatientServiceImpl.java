@@ -40,7 +40,7 @@ public class PatientServiceImpl implements PatientService {
     @Override
     @Transactional
     public PatientResponse update(Long id, PatientRequest request, Long userId) {
-        if (id.equals(userId))
+        if (!id.equals(userId))
             throw new BusinessException("This user does not authorize to update this user");
         Patient patient = getOrThrow(id);
         patientMapper.toEntityUpdated(request, patient);

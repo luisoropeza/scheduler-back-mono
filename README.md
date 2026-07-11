@@ -1,6 +1,6 @@
 # Scheduler
 
-A REST API for a clinic appointment scheduler built with Spring Boot. Doctors publish available time slots, patients book them, and staff can confirm, cancel, or reschedule appointments. Email notifications go out automatically on booking, confirmation, cancellation, and rescheduling.
+A REST API for a clinic appointment scheduler built with Spring Boot. Doctors publish available time slots, patients book them, and staff can confirm, cancel, or reschedule appointments.
 
 ## Tech stack
 
@@ -9,14 +9,12 @@ A REST API for a clinic appointment scheduler built with Spring Boot. Doctors pu
 - Spring Security with stateless JWT authentication
 - MapStruct (entity ↔ DTO mapping) + Lombok
 - springdoc-openapi (Swagger UI)
-- Spring Mail (JavaMailSender) for HTML email notifications
 - Gradle
 
 ## Prerequisites
 
 - JDK 26 (a Gradle toolchain will provision it automatically if not present)
 - A running PostgreSQL instance
-- (Optional) SMTP credentials if you want notification emails to actually send
 
 ## Configuration
 
@@ -27,9 +25,6 @@ All configuration lives in `src/main/resources/application.yaml` and is overrida
 | `DB_URL` | `jdbc:postgresql://localhost:5432/scheduler` | Database URL |
 | `DB_USERNAME` | `postgres` | Database user |
 | `DB_PASSWORD` | `postgres` | Database password |
-| `MAIL_HOST` / `MAIL_PORT` | `smtp.gmail.com` / `587` | SMTP server |
-| `MAIL_USERNAME` / `MAIL_PASSWORD` | *(empty)* | SMTP credentials |
-| `MAIL_FROM` / `MAIL_FROM_NAME` | `no-reply@scheduler.local` / `Scheduler` | Notification sender identity |
 | `CORS_ALLOWED_ORIGINS` | `*` | Allowed CORS origins |
 | `JWT_SECRET` | `change-me-in-production-minimum-32-chars!` | JWT signing secret (HMAC, must be ≥32 chars) |
 
@@ -121,8 +116,6 @@ Authentication is JWT-based: register or log in via `/api/auth/**` to get a toke
 - **Appointment** — links a patient to a booked schedule; status is `PENDING`, `CONFIRMED`, or `CANCELLED`, tracked independently of the schedule's own status. Booking, confirming, cancelling, and rescheduling keep both statuses in sync (cancelling or rescheduling frees the old slot back to `AVAILABLE`).
 - **Personal** — staff member (doctor or receptionist) with a role and, for doctors, a specialty and an assigned list of patients.
 - **Patient** — a clinic patient, optionally assigned to one or more doctors.
-
-State changes to an appointment publish an `AppointmentEvent`, which a transactional listener turns into an HTML email to the affected patient or doctor.
 
 ## Testing
 

@@ -34,7 +34,9 @@ public class AppointmentServiceImpl implements AppointmentService {
 
     @Override
     @Transactional
-    public AppointmentResponse book(AppointmentRequest request, String role) {
+    public AppointmentResponse book(AppointmentRequest request, Long userId, String role) {
+        if (role.equals(ERole.PATIENT.name()) && !request.getClientId().equals(userId))
+            throw new BusinessException("A patient can only book appointments for themselves");
         Schedule schedule = getScheduleOrThrow(request.getScheduleId());
         if (schedule.getStatus() != ScheduleStatus.AVAILABLE)
             throw new BusinessException("This schedule slot is no longer available");
@@ -61,7 +63,7 @@ public class AppointmentServiceImpl implements AppointmentService {
     @Override
     public Page<AppointmentResponse> findByClientId(Long clientId, Pageable pageable, Long userId, String role) {
         if (role.equals(ERole.PATIENT.name()))
-            if (clientId.equals(userId))
+            if (!clientId.equals(userId))
                 throw new BusinessException("Not authorized to get those appointments");
         return appointmentRepository.findByPatientId(clientId, pageable).map(appointmentMapper::toResponse);
     }
@@ -69,7 +71,7 @@ public class AppointmentServiceImpl implements AppointmentService {
     @Override
     public Page<AppointmentResponse> findByDoctorAndStatus(Long doctorId, AppointmentStatus status, Pageable pageable, Long userId, String role) {
         if(role.equals(ERole.DOCTOR.name()))
-            if (doctorId.equals(userId))
+            if (!doctorId.equals(userId))
                 throw new BusinessException("Not authorized to get those appointments");
         return appointmentRepository.findAllByFilters(doctorId, status, pageable).map(appointmentMapper::toResponse);
     }

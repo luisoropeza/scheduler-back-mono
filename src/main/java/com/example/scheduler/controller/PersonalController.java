@@ -3,6 +3,7 @@ package com.example.scheduler.controller;
 import com.example.scheduler.dto.PatientResponse;
 import com.example.scheduler.dto.PersonalRequest;
 import com.example.scheduler.dto.PersonalResponse;
+import com.example.scheduler.security.SecurityUtils;
 import com.example.scheduler.service.PersonalService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -18,7 +19,6 @@ import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.Objects;
 
 @RestController
 @RequestMapping("/api/personal")
@@ -67,7 +67,7 @@ public class PersonalController {
             @PathVariable Long patientId,
             Authentication auth
     ) {
-        personalService.assignPatient(doctorId, patientId, Long.parseLong(auth.getName()), extractRole(auth));
+        personalService.assignPatient(doctorId, patientId, Long.parseLong(auth.getName()), SecurityUtils.extractRole(auth));
         return ResponseEntity.noContent().build();
     }
 
@@ -79,7 +79,7 @@ public class PersonalController {
             @PathVariable Long patientId,
             Authentication auth
     ) {
-        personalService.removePatient(doctorId, patientId, Long.parseLong(auth.getName()), extractRole(auth));
+        personalService.removePatient(doctorId, patientId, Long.parseLong(auth.getName()), SecurityUtils.extractRole(auth));
         return ResponseEntity.noContent().build();
     }
 
@@ -88,12 +88,5 @@ public class PersonalController {
     @Operation(summary = "GET /api/personal/{doctorId}/patients — list all patients assigned to a doctor")
     public ResponseEntity<List<PatientResponse>> getPatients(@PathVariable Long doctorId) {
         return ResponseEntity.ok(personalService.getPatientsOfDoctor(doctorId));
-    }
-
-    private String extractRole(Authentication auth) {
-        return auth.getAuthorities().stream()
-                .map(a -> Objects.requireNonNull(a.getAuthority()).replace("ROLE_", ""))
-                .findFirst()
-                .orElse(null);
     }
 }
