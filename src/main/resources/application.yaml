@@ -38,6 +38,9 @@ jwt:
 security:
   public-paths: /api/auth/**
 
+n8n:
+  api-key: ${N8N_API_KEY:change-me-n8n-key}
+
 app:
   mail:
     from: ${MAIL_FROM:no-reply@scheduler.local}

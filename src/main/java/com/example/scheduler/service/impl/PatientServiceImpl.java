@@ -37,6 +37,12 @@ public class PatientServiceImpl implements PatientService {
     }
 
     @Override
+    public PatientResponse findByPhoneNumber(String phoneNumber) {
+        return patientMapper.toResponse(patientRepository.findByPhoneNumber(phoneNumber)
+                .orElseThrow(() -> new ResourceNotFoundException("Patient not found with phone number: " + phoneNumber)));
+    }
+
+    @Override
     @Transactional
     public PatientResponse update(Long id, PatientRequest request, Long userId) {
         if (!id.equals(userId))

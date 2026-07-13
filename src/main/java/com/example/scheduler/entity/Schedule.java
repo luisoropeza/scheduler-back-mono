@@ -31,4 +31,7 @@ public class Schedule {
     @Column(nullable = false)
     @Builder.Default
     private ScheduleStatus status = ScheduleStatus.AVAILABLE;
+
+    @Version
+    private Long version;
 }

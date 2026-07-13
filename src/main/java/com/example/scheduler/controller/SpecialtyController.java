@@ -6,7 +6,6 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -19,7 +18,6 @@ public class SpecialtyController {
     private final SpecialtyService specialtyService;
 
     @GetMapping
-    @PreAuthorize("hasAnyRole('DOCTOR', 'RECEPCIONIST')")
     @Operation(summary = "GET /api/specialties — list all available specialties")
     public ResponseEntity<List<SpecialtyResponse>> findAll() {
         return ResponseEntity.ok(specialtyService.findAll());
