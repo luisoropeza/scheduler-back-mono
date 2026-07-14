@@ -48,7 +48,7 @@ public class AppointmentServiceImpl implements AppointmentService {
                 .schedule(schedule)
                 .patient(patient)
                 .build();
-        if (role.equals(ERole.PATIENT.name())) {
+        if (!role.equals(ERole.PATIENT.name())) {
             appointment.setStatus(AppointmentStatus.CONFIRMED);
         }
         return appointmentMapper.toResponse(appointmentRepository.save(appointment));
