@@ -1,7 +1,6 @@
 package com.example.scheduler.config;
 
 import com.example.scheduler.entity.*;
-import com.example.scheduler.enums.AppointmentStatus;
 import com.example.scheduler.enums.ScheduleStatus;
 import com.example.scheduler.repository.*;
 import lombok.RequiredArgsConstructor;
@@ -22,8 +21,9 @@ public class DataSeeder implements ApplicationRunner {
     private final PersonalRepository personalRepository;
     private final PatientRepository patientRepository;
     private final ScheduleRepository scheduleRepository;
-    private final AppointmentRepository appointmentRepository;
     private final BCryptPasswordEncoder passwordEncoder;
+
+    private static final int[] SLOT_HOURS = {9, 10, 11, 14, 15};
 
     @Override
     @Transactional
@@ -33,6 +33,9 @@ public class DataSeeder implements ApplicationRunner {
         Specialty gm = specialtyRepository.save(Specialty.builder().name("General Medicine").build());
         Specialty dent = specialtyRepository.save(Specialty.builder().name("Dentistry").build());
         Specialty peds = specialtyRepository.save(Specialty.builder().name("Pediatrics").build());
+        Specialty cardio = specialtyRepository.save(Specialty.builder().name("Cardiology").build());
+        Specialty derma = specialtyRepository.save(Specialty.builder().name("Dermatology").build());
+        Specialty trauma = specialtyRepository.save(Specialty.builder().name("Traumatology").build());
 
         Role doctor = roleRepository.save(Role.builder().name("DOCTOR").build());
         Role receptionist = roleRepository.save(Role.builder().name("RECEPTIONIST").build());
@@ -41,6 +44,9 @@ public class DataSeeder implements ApplicationRunner {
         Personal ana = personalRepository.save(Personal.builder().name("Dr. Ana García").email("ana.garcia@clinic.com").password(pwd).role(doctor).specialty(gm).build());
         Personal carlos = personalRepository.save(Personal.builder().name("Dr. Carlos Méndez").email("carlos.mendez@clinic.com").password(pwd).role(doctor).specialty(dent).build());
         Personal laura = personalRepository.save(Personal.builder().name("Dr. Laura Torres").email("laura.torres@clinic.com").password(pwd).role(doctor).specialty(peds).build());
+        Personal sofia = personalRepository.save(Personal.builder().name("Dr. Sofía Ramírez").email("sofia.ramirez@clinic.com").password(pwd).role(doctor).specialty(cardio).build());
+        Personal diego = personalRepository.save(Personal.builder().name("Dr. Diego Fernández").email("diego.fernandez@clinic.com").password(pwd).role(doctor).specialty(derma).build());
+        Personal valentina = personalRepository.save(Personal.builder().name("Dr. Valentina Cruz").email("valentina.cruz@clinic.com").password(pwd).role(doctor).specialty(trauma).build());
         personalRepository.save(Personal.builder().name("Maria Ramos").email("maria.ramos@clinic.com").password(pwd).role(receptionist).build());
 
         Patient john = patientRepository.save(Patient.builder().name("John Smith").email("john.smith@email.com").phoneNumber("+1-555-1001").password(pwd).build());
@@ -55,20 +61,18 @@ public class DataSeeder implements ApplicationRunner {
 
         LocalDateTime base = LocalDateTime.now().withMinute(0).withSecond(0).withNano(0);
 
-        saveSchedule(ana, base.plusDays(1).withHour(9), base.plusDays(1).withHour(10), ScheduleStatus.AVAILABLE);
-        saveSchedule(ana, base.plusDays(1).withHour(10), base.plusDays(1).withHour(11), ScheduleStatus.AVAILABLE);
-        Schedule anaBooked = saveSchedule(ana, base.plusDays(2).withHour(9), base.plusDays(2).withHour(10), ScheduleStatus.BOOKED);
-        saveSchedule(carlos, base.plusDays(1).withHour(14), base.plusDays(1).withHour(15), ScheduleStatus.AVAILABLE);
-        Schedule carlosBooked = saveSchedule(carlos, base.plusDays(3).withHour(10), base.plusDays(3).withHour(11), ScheduleStatus.BOOKED);
-        saveSchedule(laura, base.plusDays(2).withHour(15), base.plusDays(2).withHour(16), ScheduleStatus.AVAILABLE);
-        saveSchedule(laura, base.plusDays(4).withHour(9), base.plusDays(4).withHour(10), ScheduleStatus.AVAILABLE);
-
-        appointmentRepository.save(Appointment.builder().schedule(anaBooked).patient(john).status(AppointmentStatus.CONFIRMED).build());
-        appointmentRepository.save(Appointment.builder().schedule(carlosBooked).patient(maria).status(AppointmentStatus.PENDING).build());
+        for (Personal d : new Personal[]{ana, carlos, laura, sofia, diego, valentina}) {
+            for (int day = 1; day <= 2; day++) {
+                for (int hour : SLOT_HOURS) {
+                    LocalDateTime start = base.plusDays(day).withHour(hour);
+                    saveSchedule(d, start, start.plusHours(1), ScheduleStatus.AVAILABLE);
+                }
+            }
+        }
     }
 
-    private Schedule saveSchedule(Personal doctor, LocalDateTime start, LocalDateTime end, ScheduleStatus status) {
-        return scheduleRepository.save(Schedule.builder()
+    private void saveSchedule(Personal doctor, LocalDateTime start, LocalDateTime end, ScheduleStatus status) {
+        scheduleRepository.save(Schedule.builder()
                 .doctor(doctor).startTime(start).endTime(end).status(status).build());
     }
 }
