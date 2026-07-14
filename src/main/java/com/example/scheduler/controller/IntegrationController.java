@@ -56,7 +56,7 @@ public class IntegrationController {
     @GetMapping("/doctors")
     @Operation(summary = "GET /api/integrations/n8n/doctors — list active doctors, filter by ?specialtyId={specialtyId}")
     public ResponseEntity<Page<PersonalResponse>> findDoctors(
-            @RequestParam(required = false) Long specialtyId,
+            @RequestParam Long specialtyId,
             @PageableDefault(sort = "id", direction = Sort.Direction.ASC) Pageable pageable
     ) {
         return ResponseEntity.ok(personalService.findAll(specialtyId, true, pageable));
@@ -72,7 +72,7 @@ public class IntegrationController {
     }
 
     @GetMapping("/patients/lookup")
-    @Operation(summary = "GET /api/integrations/n8n/patients/lookup?phoneNumber={phoneNumber} — find a registered patient by phone number")
+    @Operation(summary = "GET /api/integrations/n8n/patients/lookup — find a registered patient by for ?phoneNumber={phoneNumber}")
     public ResponseEntity<PatientResponse> lookupPatient(@RequestParam String phoneNumber) {
         return ResponseEntity.ok(patientService.findByPhoneNumber(phoneNumber));
     }
