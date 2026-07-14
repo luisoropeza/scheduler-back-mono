@@ -14,7 +14,7 @@ public interface ScheduleRepository extends JpaRepository<Schedule, Long> {
     @Query("SELECT s FROM Schedule s WHERE " +
             "(:doctorId IS NULL OR s.doctor.id = :doctorId) AND " +
             "(:status IS NULL OR s.status = :status) AND " +
-            "(:after IS NULL OR s.startTime > :after) AND " +
+            "(cast(:after as localdatetime) IS NULL OR s.startTime > :after) AND " +
             "(:specialtyId IS NULL OR s.doctor.specialty.id = :specialtyId)")
     Page<Schedule> findAllByFilters(
             @Param("doctorId") Long doctorId,
