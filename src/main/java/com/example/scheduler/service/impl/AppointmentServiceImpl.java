@@ -9,6 +9,7 @@ import com.example.scheduler.enums.AppointmentStatus;
 import com.example.scheduler.enums.ERole;
 import com.example.scheduler.enums.ScheduleStatus;
 import com.example.scheduler.exception.BusinessException;
+import com.example.scheduler.exception.ForbiddenException;
 import com.example.scheduler.exception.ResourceNotFoundException;
 import com.example.scheduler.mapper.AppointmentMapper;
 import com.example.scheduler.repository.AppointmentRepository;
@@ -36,7 +37,7 @@ public class AppointmentServiceImpl implements AppointmentService {
     @Transactional
     public AppointmentResponse book(AppointmentRequest request, Long userId, String role) {
         if (role.equals(ERole.PATIENT.name()) && !request.getClientId().equals(userId))
-            throw new BusinessException("A patient can only book appointments for themselves");
+            throw new ForbiddenException("A patient can only book appointments for themselves");
         Schedule schedule = getScheduleOrThrow(request.getScheduleId());
         if (!ScheduleStatus.AVAILABLE.equals(schedule.getStatus()))
             throw new BusinessException("This schedule slot is no longer available");
@@ -63,7 +64,7 @@ public class AppointmentServiceImpl implements AppointmentService {
     public Page<AppointmentResponse> findByClientId(Long clientId, Pageable pageable, Long userId, String role) {
         if (role.equals(ERole.PATIENT.name()))
             if (!clientId.equals(userId))
-                throw new BusinessException("Not authorized to get those appointments");
+                throw new ForbiddenException("Not authorized to get those appointments");
         return appointmentRepository.findByPatientId(clientId, pageable).map(appointmentMapper::toResponse);
     }
 
@@ -71,7 +72,7 @@ public class AppointmentServiceImpl implements AppointmentService {
     public Page<AppointmentResponse> findByDoctorAndStatus(Long doctorId, AppointmentStatus status, Pageable pageable, Long userId, String role) {
         if(role.equals(ERole.DOCTOR.name()))
             if (!doctorId.equals(userId))
-                throw new BusinessException("Not authorized to get those appointments");
+                throw new ForbiddenException("Not authorized to get those appointments");
         return appointmentRepository.findAllByFilters(doctorId, status, pageable).map(appointmentMapper::toResponse);
     }
 
@@ -81,7 +82,7 @@ public class AppointmentServiceImpl implements AppointmentService {
         Appointment appointment = getOrThrow(id);
         if(role.equals(ERole.DOCTOR.name()))
             if (!appointment.getSchedule().getDoctor().getId().equals(userId))
-                throw new BusinessException("Not authorized to confirm this appointment");
+                throw new ForbiddenException("Not authorized to confirm this appointment");
         if (appointment.getStatus() != AppointmentStatus.PENDING)
             throw new BusinessException("Only pending appointments can be confirmed");
         appointment.setStatus(AppointmentStatus.CONFIRMED);

@@ -27,6 +27,7 @@ All configuration lives in `src/main/resources/application.yaml` and is overrida
 | `DB_PASSWORD` | `postgres` | Database password |
 | `CORS_ALLOWED_ORIGINS` | `*` | Allowed CORS origins |
 | `JWT_SECRET` | `change-me-in-production-minimum-32-chars!` | JWT signing secret (HMAC, must be ≥32 chars) |
+| `N8N_API_KEY` | `change-me-n8n-key` | Static API key for the `/api/integrations/n8n/**` facade (sent as `X-API-Key`) |
 
 The defaults are for local development only — set real values for anything beyond that.
 
@@ -38,6 +39,13 @@ gradlew.bat bootRun
 
 # macOS/Linux
 ./gradlew bootRun
+```
+
+Or with Docker:
+
+```bash
+docker build -t scheduler .
+docker run --env-file .env -p 8080:8080 scheduler
 ```
 
 The app starts on `http://localhost:8080`. `spring.jpa.hibernate.ddl-auto` is set to `update`, so the schema is created/updated automatically against the configured database — no separate migration step is needed.
@@ -109,6 +117,18 @@ Authentication is JWT-based: register or log in via `/api/auth/**` to get a toke
 |---|---|---|---|
 | GET | `/api/roles` | any authenticated user | List available staff roles |
 | GET | `/api/specialties` | DOCTOR, RECEPCIONIST | List available specialties |
+
+### Integrations (`/api/integrations/n8n`)
+
+Read-only browsing + booking facade for automated callers (currently the n8n WhatsApp workflow). Authenticated via a static API key (`X-API-Key` header, see `N8N_API_KEY`) instead of a per-patient JWT, since the caller only knows the patient's phone number.
+
+| Method | Path | Description |
+|---|---|---|
+| GET | `/api/integrations/n8n/specialties` | List all specialties |
+| GET | `/api/integrations/n8n/doctors` | List active doctors; filter by `specialtyId` |
+| GET | `/api/integrations/n8n/schedules` | List available slots; filter by `doctorId` |
+| GET | `/api/integrations/n8n/patients/lookup` | Find a registered patient by `phoneNumber` |
+| POST | `/api/integrations/n8n/appointments` | Book a slot for the patient identified by phone number |
 
 ## Domain model
 

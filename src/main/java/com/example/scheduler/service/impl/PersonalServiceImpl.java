@@ -9,6 +9,7 @@ import com.example.scheduler.entity.Role;
 import com.example.scheduler.entity.Specialty;
 import com.example.scheduler.enums.ERole;
 import com.example.scheduler.exception.BusinessException;
+import com.example.scheduler.exception.ForbiddenException;
 import com.example.scheduler.exception.ResourceNotFoundException;
 import com.example.scheduler.mapper.PatientMapper;
 import com.example.scheduler.mapper.PersonalMapper;
@@ -79,7 +80,7 @@ public class PersonalServiceImpl implements PersonalService {
         Personal doctor = getOrThrow(doctorId);
         if (role.equals(ERole.DOCTOR.name()))
             if(!doctorId.equals(userId))
-                throw new BusinessException("this user cannot assign this patient");
+                throw new ForbiddenException("this user cannot assign this patient");
         Patient patient = getPatientOrThrow(patientId);
         if (!doctor.getPatients().contains(patient)) {
             doctor.getPatients().add(patient);
@@ -93,7 +94,7 @@ public class PersonalServiceImpl implements PersonalService {
         Personal doctor = getOrThrow(doctorId);
         if (role.equals(ERole.DOCTOR.name()))
             if(!doctorId.equals(userId))
-                throw new BusinessException("this user cannot assign this patient");
+                throw new ForbiddenException("this user cannot assign this patient");
         Patient patient = getPatientOrThrow(patientId);
         if (doctor.getPatients().contains(patient)) {
             doctor.getPatients().remove(patient);
