@@ -18,7 +18,7 @@ public interface ScheduleRepository extends JpaRepository<Schedule, Long> {
             "(:specialtyId IS NULL OR s.doctor.specialty.id = :specialtyId)")
     Page<Schedule> findAllByFilters(
             @Param("doctorId") Long doctorId,
-            @Param("specialty") Long specialtyId,
+            @Param("specialtyId") Long specialtyId,
             @Param("status") ScheduleStatus status,
             @Param("after") LocalDateTime after,
             Pageable pageable
