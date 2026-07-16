@@ -58,6 +58,7 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(ObjectOptimisticLockingFailureException.class)
     public ResponseEntity<ErrorResponse> handleOptimisticLock(ObjectOptimisticLockingFailureException ex) {
+        log.error("Unhandled exception", ex);
         return ResponseEntity.status(HttpStatus.CONFLICT).body(
                 ErrorResponse.builder()
                         .status(HttpStatus.CONFLICT.value())
@@ -81,8 +82,8 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(Exception.class)
-    public ResponseEntity<ErrorResponse> generic(Exception e) {
-        log.error("Unhandled exception", e);
+    public ResponseEntity<ErrorResponse> generic(Exception ex) {
+        log.error("Unhandled exception", ex);
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(
                 ErrorResponse.builder()
                         .status(HttpStatus.INTERNAL_SERVER_ERROR.value())
