@@ -106,7 +106,7 @@ public class AuthServiceImpl implements AuthService {
                 personal.setSpecialty(getSpecialtyOrThrow(request.getSpecialtyId()));
             else
                 throw new BusinessException(String.format("this %s does not have a specialty assigned", role.getName()));
-                personalRepository.save(personal);
+        personalRepository.save(personal);
     }
 
     @Override

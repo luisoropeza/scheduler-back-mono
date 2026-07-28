@@ -38,7 +38,7 @@ jwt:
 
 security:
   public-paths: /api/auth/patient/login, /api/auth/personal/login, /api/clinics/**, /swagger-ui/**, /v3/api-docs/**
-  tenant-exempt-paths: /api/clinics/**, /swagger-ui/**, /v3/api-docs/**
+  tenant-exempt-paths: /api/auth/patient/login, /api/auth/personal/login, /api/clinics/**, /swagger-ui/**, /v3/api-docs/**
 
 n8n:
   api-key: ${N8N_API_KEY:change-me-n8n-key}
