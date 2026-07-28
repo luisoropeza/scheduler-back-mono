@@ -9,6 +9,7 @@ spring:
   jpa:
     hibernate:
       ddl-auto: update
+      tenant_identifier_resolver: com.example.scheduler.config.tenant.HeaderTenantIdentifierResolver
     show-sql: true
     properties:
       hibernate:
@@ -36,7 +37,8 @@ jwt:
   secret: ${JWT_SECRET:change-me-in-production-minimum-32-chars!}
 
 security:
-  public-paths: /api/auth/**
+  public-paths: /api/auth/patient/login, /api/auth/personal/login, /api/clinics/**, /swagger-ui/**, /v3/api-docs/**
+  tenant-exempt-paths: /api/clinics/**, /swagger-ui/**, /v3/api-docs/**
 
 n8n:
   api-key: ${N8N_API_KEY:change-me-n8n-key}

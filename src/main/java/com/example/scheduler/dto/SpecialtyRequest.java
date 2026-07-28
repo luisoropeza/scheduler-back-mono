@@ -4,9 +4,7 @@ import jakarta.validation.constraints.NotBlank;
 import lombok.Data;
 
 @Data
-public class PersonalRequest {
+public class SpecialtyRequest {
     @NotBlank
     private String name;
-    private String email;
-    private Long specialtyId;
 }

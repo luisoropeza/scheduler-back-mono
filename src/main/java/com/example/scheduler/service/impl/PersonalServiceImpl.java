@@ -55,14 +55,6 @@ public class PersonalServiceImpl implements PersonalService {
     public PersonalResponse update(Long id, PersonalRequest request) {
         Personal personal = getOrThrow(id);
         personalMapper.toEntityUpdated(request, personal);
-        if (request.getRoleId() != null) {
-            personal.setRole(getRoleOrThrow(request.getRoleId()));
-        }
-        if (request.getSpecialtyId() != null)
-            if(personal.getRole().getName().equals(ERole.DOCTOR.name()))
-                personal.setSpecialty(getSpecialtyOrThrow(request.getSpecialtyId()));
-            else
-                throw new BusinessException(String.format("this %s does not have a specialty assigned", personal.getRole().getName()));
         return personalMapper.toResponse(personalRepository.save(personal));
     }
 

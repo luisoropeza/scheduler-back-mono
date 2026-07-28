@@ -15,5 +15,5 @@ public interface PersonalRepository extends JpaRepository<Personal, Long> {
             "(:specialtyId IS NULL OR p.specialty.id = :specialtyId) AND " +
             "(:isActive IS NULL OR p.active = :isActive)")
     Page<Personal> findAllByFilters(@Param("specialtyId") Long specialtyId, @Param("isActive") Boolean isActive, Pageable pageable);
-    Optional<Personal> findByEmail(String email);
+    Optional<Personal> findByAccount_Id(Long accountId);
 }

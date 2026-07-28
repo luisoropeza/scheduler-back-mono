@@ -1,5 +1,6 @@
 package com.example.scheduler.service.impl;
 
+import com.example.scheduler.dto.SpecialtyRequest;
 import com.example.scheduler.dto.SpecialtyResponse;
 import com.example.scheduler.mapper.SpecialtyMapper;
 import com.example.scheduler.repository.SpecialtyRepository;
@@ -20,5 +21,11 @@ public class SpecialtyServiceImpl implements SpecialtyService {
     @Override
     public List<SpecialtyResponse> findAll() {
         return specialtyMapper.toResponseList(specialtyRepository.findAll());
+    }
+
+    @Override
+    @Transactional
+    public SpecialtyResponse create(SpecialtyRequest request) {
+        return specialtyMapper.toResponse(specialtyRepository.save(specialtyMapper.toEntity(request)));
     }
 }

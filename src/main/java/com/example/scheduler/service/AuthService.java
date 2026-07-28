@@ -6,8 +6,8 @@ import com.example.scheduler.dto.PatientRegisterRequest;
 import com.example.scheduler.dto.PersonalRegisterRequest;
 
 public interface AuthService {
-    LoginResponse registerPatient(PatientRegisterRequest request);
+    void registerPatient(PatientRegisterRequest request);
     LoginResponse loginPatient(LoginRequest request);
-    LoginResponse registerPersonal(PersonalRegisterRequest request);
+    void registerPersonal(PersonalRegisterRequest request);
     LoginResponse loginPersonal(LoginRequest request);
 }

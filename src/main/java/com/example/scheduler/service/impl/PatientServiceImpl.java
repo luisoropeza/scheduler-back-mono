@@ -38,7 +38,7 @@ public class PatientServiceImpl implements PatientService {
 
     @Override
     public PatientResponse findByPhoneNumber(String phoneNumber) {
-        return patientMapper.toResponse(patientRepository.findByPhoneNumber(phoneNumber)
+        return patientMapper.toResponse(patientRepository.findByAccount_PhoneNumber(phoneNumber)
                 .orElseThrow(() -> new ResourceNotFoundException("Patient not found with phone number: " + phoneNumber)));
     }
 

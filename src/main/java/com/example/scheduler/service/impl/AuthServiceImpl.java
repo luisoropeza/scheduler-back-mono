@@ -5,16 +5,18 @@ import com.example.scheduler.dto.LoginResponse;
 import com.example.scheduler.dto.PatientRegisterRequest;
 import com.example.scheduler.dto.PersonalRegisterRequest;
 import com.example.scheduler.entity.Patient;
+import com.example.scheduler.entity.PatientAccount;
 import com.example.scheduler.entity.Personal;
+import com.example.scheduler.entity.PersonalAccount;
 import com.example.scheduler.entity.Role;
 import com.example.scheduler.entity.Specialty;
 import com.example.scheduler.enums.ERole;
 import com.example.scheduler.exception.BusinessException;
 import com.example.scheduler.exception.ResourceNotFoundException;
 import com.example.scheduler.exception.UnauthorizedException;
-import com.example.scheduler.mapper.PatientMapper;
-import com.example.scheduler.mapper.PersonalMapper;
+import com.example.scheduler.repository.PatientAccountRepository;
 import com.example.scheduler.repository.PatientRepository;
+import com.example.scheduler.repository.PersonalAccountRepository;
 import com.example.scheduler.repository.PersonalRepository;
 import com.example.scheduler.repository.RoleRepository;
 import com.example.scheduler.repository.SpecialtyRepository;
@@ -31,61 +33,90 @@ public class AuthServiceImpl implements AuthService {
     public static final String PATIENT_ROLE = "PATIENT";
 
     private final PatientRepository patientRepository;
+    private final PatientAccountRepository patientAccountRepository;
     private final PersonalRepository personalRepository;
+    private final PersonalAccountRepository personalAccountRepository;
     private final SpecialtyRepository specialtyRepository;
     private final RoleRepository roleRepository;
-    private final PatientMapper patientMapper;
-    private final PersonalMapper personalMapper;
     private final BCryptPasswordEncoder passwordEncoder;
     private final JwtUtil jwtUtil;
 
     @Override
     @Transactional
-    public LoginResponse registerPatient(PatientRegisterRequest request) {
-        if (patientRepository.findByEmail(request.getEmail()).isPresent() || personalRepository.findByEmail(request.getEmail()).isPresent())
+    public void registerPatient(PatientRegisterRequest request) {
+        if (personalAccountRepository.findByEmail(request.getEmail()).isPresent())
             throw new BusinessException("Email already registered");
-        Patient patient = patientMapper.toEntity(request);
-        patient.setPassword(passwordEncoder.encode(request.getPassword()));
-        return new LoginResponse(jwtUtil.generate(patientRepository.save(patient).getId(), PATIENT_ROLE));
+
+        PatientAccount account = patientAccountRepository.findByEmail(request.getEmail())
+                .map(existing -> {
+                    if (!passwordEncoder.matches(request.getPassword(), existing.getPassword()))
+                        throw new UnauthorizedException("Invalid credentials");
+                    return existing;
+                })
+                .orElseGet(() -> patientAccountRepository.save(PatientAccount.builder()
+                        .name(request.getName())
+                        .email(request.getEmail())
+                        .password(passwordEncoder.encode(request.getPassword()))
+                        .phoneNumber(request.getPhoneNumber())
+                        .build()));
+
+        if (patientRepository.findByAccount_Id(account.getId()).isPresent())
+            throw new BusinessException("Already registered in this clinic");
+
+        patientRepository.save(Patient.builder().account(account).build());
     }
 
     @Override
     public LoginResponse loginPatient(LoginRequest request) {
-        Patient patient = patientRepository.findByEmail(request.getEmail())
+        PatientAccount account = patientAccountRepository.findByEmail(request.getEmail())
                 .orElseThrow(() -> new UnauthorizedException("Invalid credentials"));
-        if (!patient.isActive()) throw new UnauthorizedException("Account is inactive");
-        if (!passwordEncoder.matches(request.getPassword(), patient.getPassword())) {
+        if (!passwordEncoder.matches(request.getPassword(), account.getPassword())) {
             throw new UnauthorizedException("Invalid credentials");
         }
-        return new LoginResponse(jwtUtil.generate(patient.getId(), PATIENT_ROLE));
+        return new LoginResponse(jwtUtil.generate(account.getId(), PATIENT_ROLE));
     }
 
     @Override
     @Transactional
-    public LoginResponse registerPersonal(PersonalRegisterRequest request) {
-        if (patientRepository.findByEmail(request.getEmail()).isPresent() || personalRepository.findByEmail(request.getEmail()).isPresent())
+    public void registerPersonal(PersonalRegisterRequest request) {
+        if (patientAccountRepository.findByEmail(request.getEmail()).isPresent())
             throw new BusinessException("Email already registered");
-        Personal personal = personalMapper.toEntity(request);
+
         Role role = getRoleOrThrow(request.getRoleId());
+
+        PersonalAccount account = personalAccountRepository.findByEmail(request.getEmail())
+                .map(existing -> {
+                    if (!passwordEncoder.matches(request.getPassword(), existing.getPassword()))
+                        throw new UnauthorizedException("Invalid credentials");
+                    return existing;
+                })
+                .orElseGet(() -> personalAccountRepository.save(PersonalAccount.builder()
+                        .name(request.getName())
+                        .email(request.getEmail())
+                        .role(role)
+                        .password(passwordEncoder.encode(request.getPassword()))
+                        .build()));
+
+        if (personalRepository.findByAccount_Id(account.getId()).isPresent())
+            throw new BusinessException("Already registered in this clinic");
+
+        Personal personal = Personal.builder().account(account).build();
         if (request.getSpecialtyId() != null)
             if(role.getName().equals(ERole.DOCTOR.name()))
                 personal.setSpecialty(getSpecialtyOrThrow(request.getSpecialtyId()));
             else
                 throw new BusinessException(String.format("this %s does not have a specialty assigned", role.getName()));
-        personal.setPassword(passwordEncoder.encode(request.getPassword()));
-        personal.setRole(role);
-        return new LoginResponse(jwtUtil.generate(personalRepository.save(personal).getId(), role.getName()));
+                personalRepository.save(personal);
     }
 
     @Override
     public LoginResponse loginPersonal(LoginRequest request) {
-        Personal personal = personalRepository.findByEmail(request.getEmail())
+        PersonalAccount account = personalAccountRepository.findByEmail(request.getEmail())
                 .orElseThrow(() -> new UnauthorizedException("Invalid credentials"));
-        if (!personal.isActive()) throw new UnauthorizedException("Account is inactive");
-        if (!passwordEncoder.matches(request.getPassword(), personal.getPassword())) {
+        if (!passwordEncoder.matches(request.getPassword(), account.getPassword())) {
             throw new UnauthorizedException("Invalid credentials");
         }
-        return new LoginResponse(jwtUtil.generate(personal.getId(), personal.getRole().getName()));
+        return new LoginResponse(jwtUtil.generate(account.getId(), account.getRole().getName()));
     }
 
     private Specialty getSpecialtyOrThrow(Long id) {

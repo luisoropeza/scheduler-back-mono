@@ -11,6 +11,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -21,9 +22,11 @@ public class AuthController {
     private final AuthService authService;
 
     @PostMapping("/patient/register")
-    @Operation(summary = "POST /api/auth/patient/register — register a new patient and return a JWT token")
-    public ResponseEntity<LoginResponse> registerPatient(@Valid @RequestBody PatientRegisterRequest request) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(authService.registerPatient(request));
+    @PreAuthorize("hasAnyRole('ADMINISTRATOR', 'RECEPTCIONIST', 'DOCTOR')")
+    @Operation(summary = "POST /api/auth/patient/register — register a new patient (administrator only)")
+    public ResponseEntity<Void> registerPatient(@Valid @RequestBody PatientRegisterRequest request) {
+        authService.registerPatient(request);
+        return ResponseEntity.status(HttpStatus.CREATED).build();
     }
 
     @PostMapping("/patient/login")
@@ -33,9 +36,11 @@ public class AuthController {
     }
 
     @PostMapping("/personal/register")
-    @Operation(summary = "POST /api/auth/personal/register — register a new staff member and return a JWT token")
-    public ResponseEntity<LoginResponse> registerPersonal(@Valid @RequestBody PersonalRegisterRequest request) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(authService.registerPersonal(request));
+    @PreAuthorize("hasRole('ADMINISTRATOR')")
+    @Operation(summary = "POST /api/auth/personal/register — register a new staff member (administrator only)")
+    public ResponseEntity<Void> registerPersonal(@Valid @RequestBody PersonalRegisterRequest request) {
+        authService.registerPersonal(request);
+        return ResponseEntity.status(HttpStatus.CREATED).build();
     }
 
     @PostMapping("/personal/login")

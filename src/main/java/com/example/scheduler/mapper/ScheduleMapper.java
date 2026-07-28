@@ -10,9 +10,9 @@ import java.util.List;
 @Mapper(componentModel = "spring")
 public interface ScheduleMapper {
     @Mapping(target = "doctorId", source = "doctor.id")
-    @Mapping(target = "doctorName", source = "doctor.name")
+    @Mapping(target = "doctorName", source = "doctor.account.name")
     @Mapping(target = "doctorSpecialty", source = "doctor.specialty.name")
-    @Mapping(target = "doctorEmail", source = "doctor.email")
+    @Mapping(target = "doctorEmail", source = "doctor.account.email")
     ScheduleResponse toResponse(Schedule schedule);
     List<ScheduleResponse> toResponseList(List<Schedule> schedules);
 }
