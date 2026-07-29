@@ -10,7 +10,8 @@ import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Component;
-import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.transaction.support.TransactionTemplate;
 
 import java.time.LocalDateTime;
 
@@ -26,13 +27,13 @@ public class DataSeeder implements ApplicationRunner {
     private final PersonalAccountRepository personalAccountRepository;
     private final ScheduleRepository scheduleRepository;
     private final BCryptPasswordEncoder passwordEncoder;
+    private final PlatformTransactionManager transactionManager;
 
     private static final int[] SLOT_HOURS = {9, 10, 11, 14, 15};
 
     @Override
-    @Transactional
     public void run(@NonNull ApplicationArguments args) {
-        if (specialtyRepository.count() > 0) return;
+        if (clinicRepository.count() > 0) return;
 
         Clinic downtown = clinicRepository.save(Clinic.builder().name("Downtown Clinic").phoneNumber("+1-555-2001").build());
         Clinic uptown = clinicRepository.save(Clinic.builder().name("Uptown Clinic").phoneNumber("+1-555-2002").build());
@@ -43,58 +44,64 @@ public class DataSeeder implements ApplicationRunner {
         Role doctor = roleRepository.save(Role.builder().name("DOCTOR").build());
         Role receptionist = roleRepository.save(Role.builder().name("RECEPTIONIST").build());
 
+        TransactionTemplate transactionTemplate = new TransactionTemplate(transactionManager);
         try {
             TenantContext.setCurrentTenant(downtown.getId().toString());
-
-            Specialty gm = specialtyRepository.save(Specialty.builder().name("General Medicine").build());
-            Specialty dent = specialtyRepository.save(Specialty.builder().name("Dentistry").build());
-            Specialty peds = specialtyRepository.save(Specialty.builder().name("Pediatrics").build());
-
-            personalRepository.save(Personal.builder().account(seedPersonalAccount("Downtown Admin", "admin.downtown@clinic.com", pwd, admin)).build());
-
-            Personal ana = personalRepository.save(Personal.builder().account(seedPersonalAccount("Dr. Ana García", "ana.garcia@clinic.com", pwd, doctor)).specialty(gm).build());
-            Personal carlos = personalRepository.save(Personal.builder().account(seedPersonalAccount("Dr. Carlos Méndez", "carlos.mendez@clinic.com", pwd, doctor)).specialty(dent).build());
-            Personal laura = personalRepository.save(Personal.builder().account(seedPersonalAccount("Dr. Laura Torres", "laura.torres@clinic.com", pwd, doctor)).specialty(peds).build());
-            personalRepository.save(Personal.builder().account(seedPersonalAccount("Maria Ramos", "maria.ramos@clinic.com", pwd, receptionist)).build());
-
-            PatientAccount johnAccount = patientAccountRepository.save(PatientAccount.builder().name("John Smith").email("john.smith@email.com").phoneNumber("+1-555-1001").password(pwd).build());
-            PatientAccount mariaAccount = patientAccountRepository.save(PatientAccount.builder().name("María López").email("maria.lopez@email.com").phoneNumber("+1-555-1002").password(pwd).build());
-            Patient john = patientRepository.save(Patient.builder().account(johnAccount).build());
-            Patient maria = patientRepository.save(Patient.builder().account(mariaAccount).build());
-
-            ana.getPatients().add(john);
-            ana.getPatients().add(maria);
-            personalRepository.save(ana);
-
-            seedSchedules(ana, carlos, laura);
+            transactionTemplate.executeWithoutResult(status -> seedDowntown(admin, doctor, receptionist, pwd));
         } finally {
             TenantContext.clear();
         }
-
         try {
             TenantContext.setCurrentTenant(uptown.getId().toString());
-
-            Specialty cardio = specialtyRepository.save(Specialty.builder().name("Cardiology").build());
-            Specialty derma = specialtyRepository.save(Specialty.builder().name("Dermatology").build());
-            Specialty trauma = specialtyRepository.save(Specialty.builder().name("Traumatology").build());
-
-            personalRepository.save(Personal.builder().account(seedPersonalAccount("Uptown Admin", "admin.uptown@clinic.com", pwd, admin)).build());
-
-            Personal sofia = personalRepository.save(Personal.builder().account(seedPersonalAccount("Dr. Sofía Ramírez", "sofia.ramirez@clinic.com", pwd, doctor)).specialty(cardio).build());
-            Personal diego = personalRepository.save(Personal.builder().account(seedPersonalAccount("Dr. Diego Fernández", "diego.fernandez@clinic.com", pwd, doctor)).specialty(derma).build());
-            Personal valentina = personalRepository.save(Personal.builder().account(seedPersonalAccount("Dr. Valentina Cruz", "valentina.cruz@clinic.com", pwd, doctor)).specialty(trauma).build());
-            personalRepository.save(Personal.builder().account(seedPersonalAccount("Pedro Álvarez", "pedro.alvarez@clinic.com", pwd, receptionist)).build());
-
-            PatientAccount jamesAccount = patientAccountRepository.save(PatientAccount.builder().name("James Wilson").email("james.wilson@email.com").phoneNumber("+1-555-1003").password(pwd).build());
-            Patient james = patientRepository.save(Patient.builder().account(jamesAccount).build());
-
-            sofia.getPatients().add(james);
-            personalRepository.save(sofia);
-
-            seedSchedules(sofia, diego, valentina);
+            transactionTemplate.executeWithoutResult(status -> seedUptown(admin, doctor, receptionist, pwd));
         } finally {
             TenantContext.clear();
         }
+    }
+
+    private void seedDowntown(Role admin, Role doctor, Role receptionist, String pwd) {
+        Specialty gm = specialtyRepository.save(Specialty.builder().name("General Medicine").build());
+        Specialty dent = specialtyRepository.save(Specialty.builder().name("Dentistry").build());
+        Specialty peds = specialtyRepository.save(Specialty.builder().name("Pediatrics").build());
+
+        personalRepository.save(Personal.builder().account(seedPersonalAccount("Downtown Admin", "admin.downtown@clinic.com", pwd, admin)).build());
+
+        Personal ana = personalRepository.save(Personal.builder().account(seedPersonalAccount("Dr. Ana García", "ana.garcia@clinic.com", pwd, doctor)).specialty(gm).build());
+        Personal carlos = personalRepository.save(Personal.builder().account(seedPersonalAccount("Dr. Carlos Méndez", "carlos.mendez@clinic.com", pwd, doctor)).specialty(dent).build());
+        Personal laura = personalRepository.save(Personal.builder().account(seedPersonalAccount("Dr. Laura Torres", "laura.torres@clinic.com", pwd, doctor)).specialty(peds).build());
+        personalRepository.save(Personal.builder().account(seedPersonalAccount("Maria Ramos", "maria.ramos@clinic.com", pwd, receptionist)).build());
+
+        PatientAccount johnAccount = patientAccountRepository.save(PatientAccount.builder().name("John Smith").email("john.smith@email.com").phoneNumber("+1-555-1001").password(pwd).build());
+        PatientAccount mariaAccount = patientAccountRepository.save(PatientAccount.builder().name("María López").email("maria.lopez@email.com").phoneNumber("+1-555-1002").password(pwd).build());
+        Patient john = patientRepository.save(Patient.builder().account(johnAccount).build());
+        Patient maria = patientRepository.save(Patient.builder().account(mariaAccount).build());
+
+        ana.getPatients().add(john);
+        ana.getPatients().add(maria);
+        personalRepository.save(ana);
+
+        seedSchedules(ana, carlos, laura);
+    }
+
+    private void seedUptown(Role admin, Role doctor, Role receptionist, String pwd) {
+        Specialty cardio = specialtyRepository.save(Specialty.builder().name("Cardiology").build());
+        Specialty derma = specialtyRepository.save(Specialty.builder().name("Dermatology").build());
+        Specialty trauma = specialtyRepository.save(Specialty.builder().name("Traumatology").build());
+
+        personalRepository.save(Personal.builder().account(seedPersonalAccount("Uptown Admin", "admin.uptown@clinic.com", pwd, admin)).build());
+
+        Personal sofia = personalRepository.save(Personal.builder().account(seedPersonalAccount("Dr. Sofía Ramírez", "sofia.ramirez@clinic.com", pwd, doctor)).specialty(cardio).build());
+        Personal diego = personalRepository.save(Personal.builder().account(seedPersonalAccount("Dr. Diego Fernández", "diego.fernandez@clinic.com", pwd, doctor)).specialty(derma).build());
+        Personal valentina = personalRepository.save(Personal.builder().account(seedPersonalAccount("Dr. Valentina Cruz", "valentina.cruz@clinic.com", pwd, doctor)).specialty(trauma).build());
+        personalRepository.save(Personal.builder().account(seedPersonalAccount("Pedro Álvarez", "pedro.alvarez@clinic.com", pwd, receptionist)).build());
+
+        PatientAccount jamesAccount = patientAccountRepository.save(PatientAccount.builder().name("James Wilson").email("james.wilson@email.com").phoneNumber("+1-555-1003").password(pwd).build());
+        Patient james = patientRepository.save(Patient.builder().account(jamesAccount).build());
+
+        sofia.getPatients().add(james);
+        personalRepository.save(sofia);
+
+        seedSchedules(sofia, diego, valentina);
     }
 
     private PersonalAccount seedPersonalAccount(String name, String email, String encodedPassword, Role role) {

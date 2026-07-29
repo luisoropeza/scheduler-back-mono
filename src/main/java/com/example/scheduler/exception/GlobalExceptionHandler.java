@@ -26,11 +26,21 @@ public class GlobalExceptionHandler {
                         .build());
     }
 
+    @ExceptionHandler(BadRequestException.class)
+    public ResponseEntity<ErrorResponse> handleBadRequest(BadRequestException ex) {
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(
+                ErrorResponse.builder()
+                        .status(HttpStatus.BAD_REQUEST.value())
+                        .message(ex.getMessage())
+                        .timestamp(LocalDateTime.now())
+                        .build());
+    }
+
     @ExceptionHandler(BusinessException.class)
     public ResponseEntity<ErrorResponse> handleBusiness(BusinessException ex) {
-        return ResponseEntity.status(HttpStatus.UNPROCESSABLE_CONTENT).body(
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(
                 ErrorResponse.builder()
-                        .status(HttpStatus.UNPROCESSABLE_CONTENT.value())
+                        .status(HttpStatus.BAD_REQUEST.value())
                         .message(ex.getMessage())
                         .timestamp(LocalDateTime.now())
                         .build());

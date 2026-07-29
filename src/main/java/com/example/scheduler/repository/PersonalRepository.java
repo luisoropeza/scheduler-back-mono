@@ -12,8 +12,12 @@ import java.util.Optional;
 public interface PersonalRepository extends JpaRepository<Personal, Long> {
 
     @Query("SELECT p FROM Personal p WHERE " +
+            "p.account.role.name = 'DOCTOR' AND " +
             "(:specialtyId IS NULL OR p.specialty.id = :specialtyId) AND " +
             "(:isActive IS NULL OR p.active = :isActive)")
     Page<Personal> findAllByFilters(@Param("specialtyId") Long specialtyId, @Param("isActive") Boolean isActive, Pageable pageable);
     Optional<Personal> findByAccount_Id(Long accountId);
+    boolean existsByAccount_IdAndClinicId(Long accountId, String clinicId);
+
+    boolean existsByAccount_Id(Long accountId);
 }

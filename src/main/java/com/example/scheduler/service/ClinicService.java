@@ -7,6 +7,5 @@ import java.util.List;
 
 public interface ClinicService {
     ClinicResponse create(ClinicRequest request);
-
     List<ClinicResponse> findAll();
 }
