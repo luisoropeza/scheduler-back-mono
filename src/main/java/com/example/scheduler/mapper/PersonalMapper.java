@@ -16,7 +16,11 @@ public interface PersonalMapper {
     PersonalResponse toResponse(Personal personal);
     @Mapping(target = "account.name", source = "name")
     @Mapping(target = "account.email", source = "email")
+    @Mapping(target = "id", ignore = true)
+    @Mapping(target = "clinicId", ignore = true)
+    @Mapping(target = "active", ignore = true)
     @Mapping(target = "specialty", ignore = true)
+    @Mapping(target = "patients", ignore = true)
     void toEntityUpdated(PersonalRequest request, @MappingTarget Personal personal);
     List<PersonalResponse> toResponseList(List<Personal> personals);
 }

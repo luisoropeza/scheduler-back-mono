@@ -47,13 +47,13 @@ public class DataSeeder implements ApplicationRunner {
         TransactionTemplate transactionTemplate = new TransactionTemplate(transactionManager);
         try {
             TenantContext.setCurrentTenant(downtown.getId().toString());
-            transactionTemplate.executeWithoutResult(status -> seedDowntown(admin, doctor, receptionist, pwd));
+            transactionTemplate.executeWithoutResult(_ -> seedDowntown(admin, doctor, receptionist, pwd));
         } finally {
             TenantContext.clear();
         }
         try {
             TenantContext.setCurrentTenant(uptown.getId().toString());
-            transactionTemplate.executeWithoutResult(status -> seedUptown(admin, doctor, receptionist, pwd));
+            transactionTemplate.executeWithoutResult(_ -> seedUptown(admin, doctor, receptionist, pwd));
         } finally {
             TenantContext.clear();
         }

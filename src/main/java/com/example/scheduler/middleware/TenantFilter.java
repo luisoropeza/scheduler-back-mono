@@ -13,7 +13,6 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.jspecify.annotations.NonNull;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -54,7 +53,7 @@ public class TenantFilter extends OncePerRequestFilter {
 
             TenantContext.setCurrentTenant(tenantId);
 
-            if (!belongsToTenant(tenantId)) {
+            if (!belongsToTenant()) {
                 throw new BusinessException("El usuario no pertenece al tenant indicado.");
             }
 
@@ -67,7 +66,7 @@ public class TenantFilter extends OncePerRequestFilter {
         }
     }
 
-    private boolean belongsToTenant(String tenantId) {
+    private boolean belongsToTenant() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         if (auth == null || !auth.isAuthenticated()) return true;
 
