@@ -14,7 +14,7 @@ import java.util.List;
 @Builder
 @EqualsAndHashCode(of = "id")
 @Entity
-@Table(name = "patients")
+@Table(name = "patients", uniqueConstraints = @UniqueConstraint(columnNames = {"patient_account_id", "clinic_id"}))
 public class Patient {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

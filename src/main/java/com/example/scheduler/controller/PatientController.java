@@ -27,7 +27,7 @@ public class PatientController {
     private final PatientService patientService;
 
     @GetMapping
-    @PreAuthorize("hasAnyRole('DOCTOR', 'RECEPCIONIST')")
+    @PreAuthorize("hasAnyRole('DOCTOR', 'RECEPTIONIST')")
     @Operation(summary = "GET /api/patients — list all patients")
     public ResponseEntity<Page<PatientResponse>> findAll(
             @PageableDefault(sort = "id", direction = Sort.Direction.ASC) Pageable pageable
@@ -36,7 +36,7 @@ public class PatientController {
     }
 
     @GetMapping("/{id}")
-    @PreAuthorize("hasAnyRole('DOCTOR', 'RECEPCIONIST')")
+    @PreAuthorize("hasAnyRole('DOCTOR', 'RECEPTIONIST')")
     @Operation(summary = "GET /api/patients/{id} — get a patient by ID")
     public ResponseEntity<PatientResponse> findById(@PathVariable Long id) {
         return ResponseEntity.ok(patientService.findById(id));
@@ -56,7 +56,7 @@ public class PatientController {
     }
 
     @GetMapping("/{patientId}/doctors")
-    @PreAuthorize("hasAnyRole('DOCTOR', 'RECEPCIONIST')")
+    @PreAuthorize("hasAnyRole('DOCTOR', 'RECEPTIONIST')")
     @Operation(summary = "GET /api/patients/{patientId}/doctors — list all doctors assigned to a patient")
     public ResponseEntity<List<PersonalResponse>> getDoctors(@PathVariable Long patientId) {
         return ResponseEntity.ok(patientService.getDoctorsOfPatient(patientId));

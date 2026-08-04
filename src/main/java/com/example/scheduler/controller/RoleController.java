@@ -19,7 +19,7 @@ public class RoleController {
     private final RoleService roleService;
 
     @GetMapping
-    @PreAuthorize("hasAnyRole('DOCTOR', 'RECEPCIONIST')")
+    @PreAuthorize("hasAnyRole('DOCTOR', 'RECEPTIONIST')")
     @Operation(summary = "GET /api/roles — list all available staff roles")
     public ResponseEntity<List<RoleResponse>> findAll() {
         return ResponseEntity.ok(roleService.findAll());

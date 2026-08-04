@@ -5,10 +5,15 @@ import com.example.scheduler.dto.ClinicRequest;
 import com.example.scheduler.dto.ClinicResponse;
 import com.example.scheduler.dto.PersonalRegisterRequest;
 import com.example.scheduler.entity.Clinic;
+import com.example.scheduler.entity.PatientAccount;
 import com.example.scheduler.entity.Role;
 import com.example.scheduler.enums.ERole;
+import com.example.scheduler.exception.ResourceNotFoundException;
 import com.example.scheduler.mapper.ClinicMapper;
 import com.example.scheduler.repository.ClinicRepository;
+import com.example.scheduler.repository.PatientAccountRepository;
+import com.example.scheduler.repository.PatientRepository;
+import com.example.scheduler.repository.PersonalRepository;
 import com.example.scheduler.repository.RoleRepository;
 import com.example.scheduler.service.AuthService;
 import com.example.scheduler.service.ClinicService;
@@ -25,6 +30,9 @@ public class ClinicServiceImpl implements ClinicService {
     private final ClinicMapper clinicMapper;
     private final RoleRepository roleRepository;
     private final AuthService authService;
+    private final PatientRepository patientRepository;
+    private final PersonalRepository personalRepository;
+    private final PatientAccountRepository patientAccountRepository;
 
     @Override
     @Transactional
@@ -52,5 +60,27 @@ public class ClinicServiceImpl implements ClinicService {
     @Override
     public List<ClinicResponse> findAll() {
         return clinicMapper.toResponseList(clinicRepository.findAll());
+    }
+
+    @Override
+    public List<ClinicResponse> findByPatientAccountId(Long accountId) {
+        return findByClinicIds(patientRepository.findClinicIdsByAccountId(accountId));
+    }
+
+    @Override
+    public List<ClinicResponse> findByPersonalAccountId(Long accountId) {
+        return findByClinicIds(personalRepository.findClinicIdsByAccountId(accountId));
+    }
+
+    @Override
+    public List<ClinicResponse> findByPatientPhoneNumber(String phoneNumber) {
+        PatientAccount account = patientAccountRepository.findByPhoneNumber(phoneNumber)
+                .orElseThrow(() -> new ResourceNotFoundException("Patient not found with phone number: " + phoneNumber));
+        return findByPatientAccountId(account.getId());
+    }
+
+    private List<ClinicResponse> findByClinicIds(List<String> clinicIds) {
+        List<Long> ids = clinicIds.stream().map(Long::valueOf).toList();
+        return clinicMapper.toResponseList(clinicRepository.findAllById(ids));
     }
 }

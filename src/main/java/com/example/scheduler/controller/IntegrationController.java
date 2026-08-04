@@ -2,6 +2,7 @@ package com.example.scheduler.controller;
 
 import com.example.scheduler.dto.AppointmentRequest;
 import com.example.scheduler.dto.AppointmentResponse;
+import com.example.scheduler.dto.ClinicResponse;
 import com.example.scheduler.dto.PatientResponse;
 import com.example.scheduler.dto.PersonalResponse;
 import com.example.scheduler.dto.ScheduleResponse;
@@ -10,6 +11,7 @@ import com.example.scheduler.enums.ERole;
 import com.example.scheduler.enums.ScheduleStatus;
 import com.example.scheduler.middleware.ApiKeyAuthFilter;
 import com.example.scheduler.service.AppointmentService;
+import com.example.scheduler.service.ClinicService;
 import com.example.scheduler.service.PatientService;
 import com.example.scheduler.service.PersonalService;
 import com.example.scheduler.service.ScheduleService;
@@ -46,6 +48,13 @@ public class IntegrationController {
     private final ScheduleService scheduleService;
     private final PatientService patientService;
     private final AppointmentService appointmentService;
+    private final ClinicService clinicService;
+
+    @GetMapping("/clinics")
+    @Operation(summary = "GET /api/integrations/n8n/clinics — list the clinics a patient (by ?phoneNumber={phoneNumber}) belongs to")
+    public ResponseEntity<List<ClinicResponse>> findClinics(@RequestParam String phoneNumber) {
+        return ResponseEntity.ok(clinicService.findByPatientPhoneNumber(phoneNumber));
+    }
 
     @GetMapping("/specialties")
     @Operation(summary = "GET /api/integrations/n8n/specialties — list all available specialties")

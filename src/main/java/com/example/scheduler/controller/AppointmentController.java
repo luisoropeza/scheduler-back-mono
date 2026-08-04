@@ -50,7 +50,7 @@ public class AppointmentController {
     }
 
     @GetMapping("/personal/{doctorId}")
-    @PreAuthorize("hasAnyRole('DOCTOR', 'RECEPCIONIST')")
+    @PreAuthorize("hasAnyRole('DOCTOR', 'RECEPTIONIST')")
     @Operation(summary = "GET /api/appointments/personal/{doctorId} — list all appointments for a personal, filter by ?status={status}")
     public ResponseEntity<Page<AppointmentResponse>> findByDoctorAndStatus(
             @PathVariable Long doctorId,
@@ -62,14 +62,14 @@ public class AppointmentController {
     }
 
     @PatchMapping("/{id}/confirm")
-    @PreAuthorize("hasAnyRole('DOCTOR', 'RECEPCIONIST')")
+    @PreAuthorize("hasAnyRole('DOCTOR', 'RECEPTIONIST')")
     @Operation(summary = "PATCH /api/appointments/{id}/confirm — confirm a pending appointment")
     public ResponseEntity<AppointmentResponse> confirm(@PathVariable Long id, Authentication auth) {
         return ResponseEntity.ok(appointmentService.confirm(id, Long.parseLong(auth.getName()), SecurityUtils.extractRole(auth)));
     }
 
     @PatchMapping("/{id}/cancel")
-    @PreAuthorize("hasAnyRole('DOCTOR', 'RECEPCIONIST')")
+    @PreAuthorize("hasAnyRole('DOCTOR', 'RECEPTIONIST')")
     @Operation(summary = "PATCH /api/appointments/{id}/cancel — cancel an appointment, releases the slot back to AVAILABLE")
     public ResponseEntity<AppointmentResponse> cancel(@PathVariable Long id) {
         return ResponseEntity.ok(appointmentService.cancel(id));
@@ -79,7 +79,7 @@ public class AppointmentController {
     public static class RescheduleRequest { private Long scheduleId; }
 
     @PatchMapping("/{id}/reschedule")
-    @PreAuthorize("hasAnyRole('DOCTOR', 'RECEPCIONIST')")
+    @PreAuthorize("hasAnyRole('DOCTOR', 'RECEPTIONIST')")
     @Operation(summary = "PATCH /api/appointments/{id}/reschedule — move an appointment to a new schedule slot (body: {scheduleId})")
     public ResponseEntity<AppointmentResponse> reschedule(
             @PathVariable Long id,

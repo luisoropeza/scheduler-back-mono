@@ -38,9 +38,9 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(BusinessException.class)
     public ResponseEntity<ErrorResponse> handleBusiness(BusinessException ex) {
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(
+        return ResponseEntity.status(HttpStatus.NOT_ACCEPTABLE).body(
                 ErrorResponse.builder()
-                        .status(HttpStatus.BAD_REQUEST.value())
+                        .status(HttpStatus.NOT_ACCEPTABLE.value())
                         .message(ex.getMessage())
                         .timestamp(LocalDateTime.now())
                         .build());

@@ -22,7 +22,7 @@ public class AuthController {
     private final AuthService authService;
 
     @PostMapping("/patient/register")
-    @PreAuthorize("hasAnyRole('ADMINISTRATOR', 'RECEPTCIONIST', 'DOCTOR')")
+    @PreAuthorize("hasAnyRole('ADMINISTRATOR', 'RECEPTIONIST', 'DOCTOR')")
     @Operation(summary = "POST /api/auth/patient/register — register a new patient (administrator only)")
     public ResponseEntity<Void> registerPatient(@Valid @RequestBody PatientRegisterRequest request) {
         authService.registerPatient(request);
