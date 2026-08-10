@@ -1,9 +1,8 @@
 package com.example.scheduler.controller;
 
-import com.example.scheduler.dto.ClinicRequest;
-import com.example.scheduler.dto.ClinicResponse;
+import com.example.scheduler.dto.clinic.ClinicRequest;
+import com.example.scheduler.dto.clinic.ClinicResponse;
 import com.example.scheduler.enums.ERole;
-import com.example.scheduler.exception.UnauthorizedException;
 import com.example.scheduler.security.SecurityUtils;
 import com.example.scheduler.service.ClinicService;
 import io.swagger.v3.oas.annotations.Operation;

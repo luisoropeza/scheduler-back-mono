@@ -1,12 +1,12 @@
-package com.example.scheduler.dto;
+package com.example.scheduler.dto.patient;
 
 import jakarta.validation.constraints.NotBlank;
 import lombok.Data;
 
 @Data
-public class PersonalRequest {
+public class PatientRequest {
     @NotBlank
     private String name;
     private String email;
-    private Long specialtyId;
+    private String phoneNumber;
 }

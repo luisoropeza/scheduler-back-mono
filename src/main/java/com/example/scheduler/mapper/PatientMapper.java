@@ -1,7 +1,7 @@
 package com.example.scheduler.mapper;
 
-import com.example.scheduler.dto.PatientRequest;
-import com.example.scheduler.dto.PatientResponse;
+import com.example.scheduler.dto.patient.PatientRequest;
+import com.example.scheduler.dto.patient.PatientResponse;
 import com.example.scheduler.entity.Patient;
 import org.mapstruct.*;
 

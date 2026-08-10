@@ -1,6 +1,6 @@
 package com.example.scheduler.mapper;
 
-import com.example.scheduler.dto.RoleResponse;
+import com.example.scheduler.dto.role.RoleResponse;
 import com.example.scheduler.entity.Role;
 import org.mapstruct.Mapper;
 

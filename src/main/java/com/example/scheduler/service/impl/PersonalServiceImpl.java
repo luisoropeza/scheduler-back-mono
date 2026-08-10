@@ -1,14 +1,13 @@
 package com.example.scheduler.service.impl;
 
-import com.example.scheduler.dto.PatientResponse;
-import com.example.scheduler.dto.PersonalRequest;
-import com.example.scheduler.dto.PersonalResponse;
+import com.example.scheduler.dto.patient.PatientResponse;
+import com.example.scheduler.dto.personal.PersonalRequest;
+import com.example.scheduler.dto.personal.PersonalResponse;
 import com.example.scheduler.entity.Patient;
 import com.example.scheduler.entity.Personal;
 import com.example.scheduler.entity.Role;
 import com.example.scheduler.entity.Specialty;
 import com.example.scheduler.enums.ERole;
-import com.example.scheduler.exception.BusinessException;
 import com.example.scheduler.exception.ForbiddenException;
 import com.example.scheduler.exception.ResourceNotFoundException;
 import com.example.scheduler.mapper.PatientMapper;
@@ -86,7 +85,7 @@ public class PersonalServiceImpl implements PersonalService {
         Personal doctor = getOrThrow(doctorId);
         if (role.equals(ERole.DOCTOR.name()))
             if(!doctorId.equals(userId))
-                throw new ForbiddenException("this user cannot assign this patient");
+                throw new ForbiddenException("this user cannot remove this patient");
         Patient patient = getPatientOrThrow(patientId);
         if (doctor.getPatients().contains(patient)) {
             doctor.getPatients().remove(patient);

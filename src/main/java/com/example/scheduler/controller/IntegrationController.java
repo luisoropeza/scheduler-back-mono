@@ -1,12 +1,12 @@
 package com.example.scheduler.controller;
 
-import com.example.scheduler.dto.AppointmentRequest;
-import com.example.scheduler.dto.AppointmentResponse;
-import com.example.scheduler.dto.ClinicResponse;
-import com.example.scheduler.dto.PatientResponse;
-import com.example.scheduler.dto.PersonalResponse;
-import com.example.scheduler.dto.ScheduleResponse;
-import com.example.scheduler.dto.SpecialtyResponse;
+import com.example.scheduler.dto.appintment.AppointmentRequest;
+import com.example.scheduler.dto.appintment.AppointmentResponse;
+import com.example.scheduler.dto.clinic.ClinicResponse;
+import com.example.scheduler.dto.patient.PatientResponse;
+import com.example.scheduler.dto.personal.PersonalResponse;
+import com.example.scheduler.dto.schedule.ScheduleResponse;
+import com.example.scheduler.dto.specialty.SpecialtyResponse;
 import com.example.scheduler.enums.ERole;
 import com.example.scheduler.enums.ScheduleStatus;
 import com.example.scheduler.middleware.ApiKeyAuthFilter;

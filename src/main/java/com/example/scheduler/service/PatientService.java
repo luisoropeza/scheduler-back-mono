@@ -1,8 +1,8 @@
 package com.example.scheduler.service;
 
-import com.example.scheduler.dto.PatientRequest;
-import com.example.scheduler.dto.PatientResponse;
-import com.example.scheduler.dto.PersonalResponse;
+import com.example.scheduler.dto.patient.PatientRequest;
+import com.example.scheduler.dto.patient.PatientResponse;
+import com.example.scheduler.dto.personal.PersonalResponse;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 

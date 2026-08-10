@@ -1,4 +1,4 @@
-package com.example.scheduler.dto;
+package com.example.scheduler.dto.schedule;
 
 import lombok.Data;
 

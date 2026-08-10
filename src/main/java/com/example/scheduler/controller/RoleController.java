@@ -1,6 +1,6 @@
 package com.example.scheduler.controller;
 
-import com.example.scheduler.dto.RoleResponse;
+import com.example.scheduler.dto.role.RoleResponse;
 import com.example.scheduler.service.RoleService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;

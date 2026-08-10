@@ -1,7 +1,7 @@
 package com.example.scheduler.service.impl;
 
-import com.example.scheduler.dto.ScheduleRequest;
-import com.example.scheduler.dto.ScheduleResponse;
+import com.example.scheduler.dto.schedule.ScheduleRequest;
+import com.example.scheduler.dto.schedule.ScheduleResponse;
 import com.example.scheduler.entity.Personal;
 import com.example.scheduler.entity.Schedule;
 import com.example.scheduler.enums.ScheduleStatus;

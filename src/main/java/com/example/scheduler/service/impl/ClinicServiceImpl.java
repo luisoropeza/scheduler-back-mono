@@ -1,9 +1,9 @@
 package com.example.scheduler.service.impl;
 
 import com.example.scheduler.config.tenant.TenantContext;
-import com.example.scheduler.dto.ClinicRequest;
-import com.example.scheduler.dto.ClinicResponse;
-import com.example.scheduler.dto.PersonalRegisterRequest;
+import com.example.scheduler.dto.clinic.ClinicRequest;
+import com.example.scheduler.dto.clinic.ClinicResponse;
+import com.example.scheduler.dto.personal.PersonalRegisterRequest;
 import com.example.scheduler.entity.Clinic;
 import com.example.scheduler.entity.PatientAccount;
 import com.example.scheduler.entity.Role;
@@ -37,10 +37,9 @@ public class ClinicServiceImpl implements ClinicService {
     @Override
     @Transactional
     public ClinicResponse create(ClinicRequest request) {
-        Clinic saved = clinicRepository.save(clinicMapper.toEntity(request));
-
+        Clinic clinic = clinicRepository.save(clinicMapper.toEntity(request));
         try {
-            TenantContext.setCurrentTenant(saved.getId().toString());
+            TenantContext.setCurrentTenant(clinic.getId().toString());
             Role adminRole = roleRepository.findByName(ERole.ADMINISTRATOR.name())
                     .orElseGet(() -> roleRepository.save(Role.builder().name(ERole.ADMINISTRATOR.name()).build()));
 
@@ -54,7 +53,7 @@ public class ClinicServiceImpl implements ClinicService {
             TenantContext.clear();
         }
 
-        return clinicMapper.toResponse(saved);
+        return clinicMapper.toResponse(clinic);
     }
 
     @Override

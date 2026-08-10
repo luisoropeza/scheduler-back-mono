@@ -1,10 +1,13 @@
 package com.example.scheduler.service.impl;
 
-import com.example.scheduler.dto.AppointmentRequest;
-import com.example.scheduler.dto.AppointmentResponse;
+import com.example.scheduler.dto.appintment.AppointmentBoardItem;
+import com.example.scheduler.dto.appintment.AppointmentCalendarItem;
+import com.example.scheduler.dto.appintment.AppointmentRequest;
+import com.example.scheduler.dto.appintment.AppointmentResponse;
 import com.example.scheduler.entity.Appointment;
 import com.example.scheduler.entity.Patient;
 import com.example.scheduler.entity.Schedule;
+import com.example.scheduler.enums.AppointmentPriority;
 import com.example.scheduler.enums.AppointmentStatus;
 import com.example.scheduler.enums.ERole;
 import com.example.scheduler.enums.ScheduleStatus;
@@ -22,12 +25,22 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.EnumMap;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
 public class AppointmentServiceImpl implements AppointmentService {
+    private static final DateTimeFormatter TIME_FORMATTER = DateTimeFormatter.ofPattern("hh:mm a");
+    private static final DateTimeFormatter CALENDAR_KEY_FORMATTER = DateTimeFormatter.ofPattern("MM-dd-yyyy");
+
     private final AppointmentRepository appointmentRepository;
     private final ScheduleRepository scheduleRepository;
     private final PatientRepository patientRepository;
@@ -116,6 +129,89 @@ public class AppointmentServiceImpl implements AppointmentService {
         appointment.setSchedule(newSchedule);
         appointment.setStatus(AppointmentStatus.CONFIRMED);
         return appointmentMapper.toResponse(appointmentRepository.save(appointment));
+    }
+
+    @Override
+    @Transactional
+    public AppointmentResponse setPriority(Long id, AppointmentPriority priority, Long userId, String role) {
+        Appointment appointment = getOrThrow(id);
+        if (role.equals(ERole.DOCTOR.name()))
+            if (!appointment.getSchedule().getDoctor().getId().equals(userId))
+                throw new ForbiddenException("Not authorized to update this appointment's priority");
+        appointment.setPriority(priority);
+        return appointmentMapper.toResponse(appointmentRepository.save(appointment));
+    }
+
+    @Override
+    public Map<AppointmentStatus, List<AppointmentBoardItem>> getDoctorBoardByRange(Long doctorId, LocalDate from, LocalDate to, Long userId, String role) {
+        if (role.equals(ERole.DOCTOR.name()))
+            if (!doctorId.equals(userId))
+                throw new ForbiddenException("Not authorized to get those appointments");
+        return groupByStatus(appointmentRepository.findByDoctorAndDateRange(doctorId, from.atStartOfDay(), to.plusDays(1).atStartOfDay()));
+    }
+
+    @Override
+    public Map<AppointmentStatus, List<AppointmentBoardItem>> getClientBoardByRange(Long clientId, LocalDate from, LocalDate to, Long userId, String role) {
+        if (role.equals(ERole.PATIENT.name()))
+            if (!clientId.equals(userId))
+                throw new ForbiddenException("Not authorized to get those appointments");
+        return groupByStatus(appointmentRepository.findByPatientAndDateRange(clientId, from.atStartOfDay(), to.plusDays(1).atStartOfDay()));
+    }
+
+    @Override
+    public Map<String, List<AppointmentCalendarItem>> getDoctorCalendar(Long doctorId, int month, int year, Long userId, String role) {
+        if (role.equals(ERole.DOCTOR.name()))
+            if (!doctorId.equals(userId))
+                throw new ForbiddenException("Not authorized to get those appointments");
+        LocalDate monthStart = LocalDate.of(year, month, 1);
+        return groupByDay(appointmentRepository.findByDoctorAndDateRange(doctorId, monthStart.atStartOfDay(), monthStart.plusMonths(1).atStartOfDay()));
+    }
+
+    @Override
+    public Map<String, List<AppointmentCalendarItem>> getClientCalendar(Long clientId, int month, int year, Long userId, String role) {
+        if (role.equals(ERole.PATIENT.name()))
+            if (!clientId.equals(userId))
+                throw new ForbiddenException("Not authorized to get those appointments");
+        LocalDate monthStart = LocalDate.of(year, month, 1);
+        return groupByDay(appointmentRepository.findByPatientAndDateRange(clientId, monthStart.atStartOfDay(), monthStart.plusMonths(1).atStartOfDay()));
+    }
+
+    private Map<AppointmentStatus, List<AppointmentBoardItem>> groupByStatus(List<Appointment> appointments) {
+        Map<AppointmentStatus, List<AppointmentBoardItem>> board = new EnumMap<>(AppointmentStatus.class);
+        for (AppointmentStatus status : AppointmentStatus.values())
+            board.put(status, new ArrayList<>());
+        for (Appointment appointment : appointments)
+            board.get(appointment.getStatus()).add(toBoardItem(appointment));
+        return board;
+    }
+
+    private Map<String, List<AppointmentCalendarItem>> groupByDay(List<Appointment> appointments) {
+        Map<String, List<AppointmentCalendarItem>> calendar = new LinkedHashMap<>();
+        for (Appointment appointment : appointments) {
+            String key = appointment.getSchedule().getStartTime().toLocalDate().format(CALENDAR_KEY_FORMATTER);
+            calendar.computeIfAbsent(key, k -> new ArrayList<>()).add(toCalendarItem(appointment));
+        }
+        return calendar;
+    }
+
+    private AppointmentBoardItem toBoardItem(Appointment appointment) {
+        LocalDateTime startTime = appointment.getSchedule().getStartTime();
+        return AppointmentBoardItem.builder()
+                .clientName(appointment.getPatient().getAccount().getName())
+                .doctorName(appointment.getSchedule().getDoctor().getAccount().getName())
+                .appointmentDate(startTime.toLocalDate())
+                .appointmentTime(startTime.format(TIME_FORMATTER))
+                .priority(appointment.getPriority().getDisplayName())
+                .build();
+    }
+
+    private AppointmentCalendarItem toCalendarItem(Appointment appointment) {
+        return AppointmentCalendarItem.builder()
+                .clientName(appointment.getPatient().getAccount().getName())
+                .doctorName(appointment.getSchedule().getDoctor().getAccount().getName())
+                .appointmentTime(appointment.getSchedule().getStartTime().format(TIME_FORMATTER))
+                .priority(appointment.getPriority().getDisplayName())
+                .build();
     }
 
     private Appointment getOrThrow(Long id) {

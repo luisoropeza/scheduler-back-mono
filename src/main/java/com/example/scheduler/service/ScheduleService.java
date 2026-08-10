@@ -1,7 +1,7 @@
 package com.example.scheduler.service;
 
-import com.example.scheduler.dto.ScheduleRequest;
-import com.example.scheduler.dto.ScheduleResponse;
+import com.example.scheduler.dto.schedule.ScheduleRequest;
+import com.example.scheduler.dto.schedule.ScheduleResponse;
 import com.example.scheduler.enums.ScheduleStatus;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;

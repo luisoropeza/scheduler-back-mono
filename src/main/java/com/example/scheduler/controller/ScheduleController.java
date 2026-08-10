@@ -1,7 +1,7 @@
 package com.example.scheduler.controller;
 
-import com.example.scheduler.dto.ScheduleRequest;
-import com.example.scheduler.dto.ScheduleResponse;
+import com.example.scheduler.dto.schedule.ScheduleRequest;
+import com.example.scheduler.dto.schedule.ScheduleResponse;
 import com.example.scheduler.enums.ScheduleStatus;
 import com.example.scheduler.service.ScheduleService;
 import io.swagger.v3.oas.annotations.Operation;

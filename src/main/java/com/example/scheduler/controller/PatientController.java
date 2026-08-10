@@ -1,8 +1,8 @@
 package com.example.scheduler.controller;
 
-import com.example.scheduler.dto.PatientRequest;
-import com.example.scheduler.dto.PatientResponse;
-import com.example.scheduler.dto.PersonalResponse;
+import com.example.scheduler.dto.patient.PatientRequest;
+import com.example.scheduler.dto.patient.PatientResponse;
+import com.example.scheduler.dto.personal.PersonalResponse;
 import com.example.scheduler.service.PatientService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;

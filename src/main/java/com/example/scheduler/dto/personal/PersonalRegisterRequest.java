@@ -1,12 +1,13 @@
-package com.example.scheduler.dto;
+package com.example.scheduler.dto.personal;
 
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import lombok.Data;
 
 @Data
-public class PatientRegisterRequest {
+public class PersonalRegisterRequest {
     @NotBlank
     private String name;
     @NotBlank
@@ -15,5 +16,7 @@ public class PatientRegisterRequest {
     @NotBlank
     @Size(min = 8)
     private String password;
-    private String phoneNumber;
+    @NotNull
+    private Long roleId;
+    private Long specialtyId;
 }

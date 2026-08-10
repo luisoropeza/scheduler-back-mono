@@ -1,7 +1,7 @@
 package com.example.scheduler.mapper;
 
-import com.example.scheduler.dto.SpecialtyRequest;
-import com.example.scheduler.dto.SpecialtyResponse;
+import com.example.scheduler.dto.specialty.SpecialtyRequest;
+import com.example.scheduler.dto.specialty.SpecialtyResponse;
 import com.example.scheduler.entity.Specialty;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;

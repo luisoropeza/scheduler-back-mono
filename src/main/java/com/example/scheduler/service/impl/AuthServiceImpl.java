@@ -1,9 +1,9 @@
 package com.example.scheduler.service.impl;
 
-import com.example.scheduler.dto.LoginRequest;
-import com.example.scheduler.dto.LoginResponse;
-import com.example.scheduler.dto.PatientRegisterRequest;
-import com.example.scheduler.dto.PersonalRegisterRequest;
+import com.example.scheduler.dto.login.LoginRequest;
+import com.example.scheduler.dto.login.LoginResponse;
+import com.example.scheduler.dto.patient.PatientRegisterRequest;
+import com.example.scheduler.dto.personal.PersonalRegisterRequest;
 import com.example.scheduler.entity.Patient;
 import com.example.scheduler.entity.PatientAccount;
 import com.example.scheduler.entity.Personal;

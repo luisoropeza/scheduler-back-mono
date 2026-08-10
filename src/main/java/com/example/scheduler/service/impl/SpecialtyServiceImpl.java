@@ -1,7 +1,7 @@
 package com.example.scheduler.service.impl;
 
-import com.example.scheduler.dto.SpecialtyRequest;
-import com.example.scheduler.dto.SpecialtyResponse;
+import com.example.scheduler.dto.specialty.SpecialtyRequest;
+import com.example.scheduler.dto.specialty.SpecialtyResponse;
 import com.example.scheduler.exception.BusinessException;
 import com.example.scheduler.mapper.SpecialtyMapper;
 import com.example.scheduler.repository.SpecialtyRepository;

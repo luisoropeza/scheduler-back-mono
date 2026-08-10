@@ -1,7 +1,7 @@
 package com.example.scheduler.mapper;
 
-import com.example.scheduler.dto.PersonalRequest;
-import com.example.scheduler.dto.PersonalResponse;
+import com.example.scheduler.dto.personal.PersonalRequest;
+import com.example.scheduler.dto.personal.PersonalResponse;
 import com.example.scheduler.entity.Personal;
 import org.mapstruct.*;
 

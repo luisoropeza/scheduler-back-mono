@@ -1,7 +1,7 @@
 package com.example.scheduler.controller;
 
-import com.example.scheduler.dto.SpecialtyRequest;
-import com.example.scheduler.dto.SpecialtyResponse;
+import com.example.scheduler.dto.specialty.SpecialtyRequest;
+import com.example.scheduler.dto.specialty.SpecialtyResponse;
 import com.example.scheduler.service.SpecialtyService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;

@@ -1,7 +1,7 @@
 package com.example.scheduler.service;
 
-import com.example.scheduler.dto.ClinicRequest;
-import com.example.scheduler.dto.ClinicResponse;
+import com.example.scheduler.dto.clinic.ClinicRequest;
+import com.example.scheduler.dto.clinic.ClinicResponse;
 
 import java.util.List;
 

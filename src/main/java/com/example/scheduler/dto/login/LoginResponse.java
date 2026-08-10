@@ -1,4 +1,4 @@
-package com.example.scheduler.dto;
+package com.example.scheduler.dto.login;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;

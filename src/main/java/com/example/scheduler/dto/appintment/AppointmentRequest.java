@@ -1,4 +1,4 @@
-package com.example.scheduler.dto;
+package com.example.scheduler.dto.appintment;
 
 import jakarta.validation.constraints.NotNull;
 import lombok.Data;

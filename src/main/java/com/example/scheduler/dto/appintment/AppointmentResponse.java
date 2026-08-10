@@ -1,5 +1,6 @@
-package com.example.scheduler.dto;
+package com.example.scheduler.dto.appintment;
 
+import com.example.scheduler.enums.AppointmentPriority;
 import com.example.scheduler.enums.AppointmentStatus;
 import lombok.Data;
 
@@ -26,5 +27,6 @@ public class AppointmentResponse {
     private String clientEmail;
 
     private AppointmentStatus status;
+    private AppointmentPriority priority;
     private LocalDateTime createdAt;
 }
