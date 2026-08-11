@@ -1,6 +1,6 @@
 package com.example.scheduler.mapper;
 
-import com.example.scheduler.dto.appintment.AppointmentResponse;
+import com.example.scheduler.dto.appointment.AppointmentResponse;
 import com.example.scheduler.entity.Appointment;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
@@ -17,5 +17,6 @@ public interface AppointmentMapper {
     @Mapping(target = "clientId", source = "patient.id")
     @Mapping(target = "clientName", source = "patient.account.name")
     @Mapping(target = "clientEmail", source = "patient.account.email")
+    @Mapping(target = "status", expression = "java(appointment.getStatus().getDisplayName())")
     AppointmentResponse toResponse(Appointment appointment);
 }

@@ -1,13 +1,12 @@
 package com.example.scheduler.service.impl;
 
-import com.example.scheduler.dto.appintment.AppointmentBoardItem;
-import com.example.scheduler.dto.appintment.AppointmentCalendarItem;
-import com.example.scheduler.dto.appintment.AppointmentRequest;
-import com.example.scheduler.dto.appintment.AppointmentResponse;
+import com.example.scheduler.dto.appointment.AppointmentRequest;
+import com.example.scheduler.dto.appointment.AppointmentResponse;
+import com.example.scheduler.dto.appointment.AppointmentSummaryItem;
 import com.example.scheduler.entity.Appointment;
 import com.example.scheduler.entity.Patient;
+import com.example.scheduler.entity.Personal;
 import com.example.scheduler.entity.Schedule;
-import com.example.scheduler.enums.AppointmentPriority;
 import com.example.scheduler.enums.AppointmentStatus;
 import com.example.scheduler.enums.ERole;
 import com.example.scheduler.enums.ScheduleStatus;
@@ -17,6 +16,7 @@ import com.example.scheduler.exception.ResourceNotFoundException;
 import com.example.scheduler.mapper.AppointmentMapper;
 import com.example.scheduler.repository.AppointmentRepository;
 import com.example.scheduler.repository.PatientRepository;
+import com.example.scheduler.repository.PersonalRepository;
 import com.example.scheduler.repository.ScheduleRepository;
 import com.example.scheduler.service.AppointmentService;
 import lombok.RequiredArgsConstructor;
@@ -44,19 +44,20 @@ public class AppointmentServiceImpl implements AppointmentService {
     private final AppointmentRepository appointmentRepository;
     private final ScheduleRepository scheduleRepository;
     private final PatientRepository patientRepository;
+    private final PersonalRepository personalRepository;
     private final AppointmentMapper appointmentMapper;
 
     @Override
     @Transactional
     public AppointmentResponse book(AppointmentRequest request, Long userId, String role) {
-        if (role.equals(ERole.PATIENT.name()) && !request.getClientId().equals(userId))
-            throw new ForbiddenException("A patient can only book appointments for themselves");
         Schedule schedule = getScheduleOrThrow(request.getScheduleId());
         if (!ScheduleStatus.AVAILABLE.equals(schedule.getStatus()))
             throw new BusinessException("This schedule slot is no longer available");
         if (schedule.getStartTime().isBefore(LocalDateTime.now()))
             throw new BusinessException("Cannot book a past schedule slot");
         Patient patient = getPatientOrThrow(request.getClientId());
+        if (role.equals(ERole.PATIENT.name()) && !patient.getAccount().getId().equals(userId))
+            throw new ForbiddenException("A patient can only book appointments for themselves");
         schedule.setStatus(ScheduleStatus.BOOKED);
         Appointment appointment = Appointment.builder()
                 .schedule(schedule)
@@ -74,19 +75,10 @@ public class AppointmentServiceImpl implements AppointmentService {
     }
 
     @Override
-    public Page<AppointmentResponse> findByClientId(Long clientId, Pageable pageable, Long userId, String role) {
-        if (role.equals(ERole.PATIENT.name()))
-            if (!clientId.equals(userId))
-                throw new ForbiddenException("Not authorized to get those appointments");
-        return appointmentRepository.findByPatientId(clientId, pageable).map(appointmentMapper::toResponse);
-    }
-
-    @Override
-    public Page<AppointmentResponse> findByDoctorAndStatus(Long doctorId, AppointmentStatus status, Pageable pageable, Long userId, String role) {
-        if(role.equals(ERole.DOCTOR.name()))
-            if (!doctorId.equals(userId))
-                throw new ForbiddenException("Not authorized to get those appointments");
-        return appointmentRepository.findAllByFilters(doctorId, status, pageable).map(appointmentMapper::toResponse);
+    public Page<AppointmentResponse> findAppointments(Long doctorId, Long clientId, AppointmentStatus status, Pageable pageable, Long userId, String role) {
+        Long resolvedDoctorId = resolveDoctorFilter(doctorId, userId, role);
+        Long resolvedClientId = resolveClientFilter(clientId, userId, role);
+        return appointmentRepository.findAllByFilters(resolvedDoctorId, resolvedClientId, status, pageable).map(appointmentMapper::toResponse);
     }
 
     @Override
@@ -94,7 +86,7 @@ public class AppointmentServiceImpl implements AppointmentService {
     public AppointmentResponse confirm(Long id, Long userId, String role) {
         Appointment appointment = getOrThrow(id);
         if(role.equals(ERole.DOCTOR.name()))
-            if (!appointment.getSchedule().getDoctor().getId().equals(userId))
+            if (!appointment.getSchedule().getDoctor().getAccount().getId().equals(userId))
                 throw new ForbiddenException("Not authorized to confirm this appointment");
         if (appointment.getStatus() != AppointmentStatus.PENDING)
             throw new BusinessException("Only pending appointments can be confirmed");
@@ -132,85 +124,63 @@ public class AppointmentServiceImpl implements AppointmentService {
     }
 
     @Override
-    @Transactional
-    public AppointmentResponse setPriority(Long id, AppointmentPriority priority, Long userId, String role) {
-        Appointment appointment = getOrThrow(id);
-        if (role.equals(ERole.DOCTOR.name()))
-            if (!appointment.getSchedule().getDoctor().getId().equals(userId))
-                throw new ForbiddenException("Not authorized to update this appointment's priority");
-        appointment.setPriority(priority);
-        return appointmentMapper.toResponse(appointmentRepository.save(appointment));
+    public Map<AppointmentStatus, List<AppointmentSummaryItem>> getBoardByRange(LocalDate from, LocalDate to, Long doctorId, Long clientId, Long userId, String role) {
+        Long resolvedDoctorId = resolveDoctorFilter(doctorId, userId, role);
+        Long resolvedClientId = resolveClientFilter(clientId, userId, role);
+        return groupByStatus(appointmentRepository.findByFiltersAndDateRange(resolvedDoctorId, resolvedClientId, from.atStartOfDay(), to.plusDays(1).atStartOfDay()));
     }
 
     @Override
-    public Map<AppointmentStatus, List<AppointmentBoardItem>> getDoctorBoardByRange(Long doctorId, LocalDate from, LocalDate to, Long userId, String role) {
-        if (role.equals(ERole.DOCTOR.name()))
-            if (!doctorId.equals(userId))
-                throw new ForbiddenException("Not authorized to get those appointments");
-        return groupByStatus(appointmentRepository.findByDoctorAndDateRange(doctorId, from.atStartOfDay(), to.plusDays(1).atStartOfDay()));
-    }
-
-    @Override
-    public Map<AppointmentStatus, List<AppointmentBoardItem>> getClientBoardByRange(Long clientId, LocalDate from, LocalDate to, Long userId, String role) {
-        if (role.equals(ERole.PATIENT.name()))
-            if (!clientId.equals(userId))
-                throw new ForbiddenException("Not authorized to get those appointments");
-        return groupByStatus(appointmentRepository.findByPatientAndDateRange(clientId, from.atStartOfDay(), to.plusDays(1).atStartOfDay()));
-    }
-
-    @Override
-    public Map<String, List<AppointmentCalendarItem>> getDoctorCalendar(Long doctorId, int month, int year, Long userId, String role) {
-        if (role.equals(ERole.DOCTOR.name()))
-            if (!doctorId.equals(userId))
-                throw new ForbiddenException("Not authorized to get those appointments");
+    public Map<String, List<AppointmentSummaryItem>> getCalendar(int month, int year, Long doctorId, Long clientId, Long userId, String role) {
+        Long resolvedDoctorId = resolveDoctorFilter(doctorId, userId, role);
+        Long resolvedClientId = resolveClientFilter(clientId, userId, role);
         LocalDate monthStart = LocalDate.of(year, month, 1);
-        return groupByDay(appointmentRepository.findByDoctorAndDateRange(doctorId, monthStart.atStartOfDay(), monthStart.plusMonths(1).atStartOfDay()));
+        return groupByDay(appointmentRepository.findByFiltersAndDateRange(resolvedDoctorId, resolvedClientId, monthStart.atStartOfDay(), monthStart.plusMonths(1).atStartOfDay()));
     }
 
-    @Override
-    public Map<String, List<AppointmentCalendarItem>> getClientCalendar(Long clientId, int month, int year, Long userId, String role) {
-        if (role.equals(ERole.PATIENT.name()))
-            if (!clientId.equals(userId))
-                throw new ForbiddenException("Not authorized to get those appointments");
-        LocalDate monthStart = LocalDate.of(year, month, 1);
-        return groupByDay(appointmentRepository.findByPatientAndDateRange(clientId, monthStart.atStartOfDay(), monthStart.plusMonths(1).atStartOfDay()));
+    private Long resolveDoctorFilter(Long doctorId, Long userId, String role) {
+        if (!role.equals(ERole.DOCTOR.name()))
+            return doctorId;
+        Long callerDoctorId = resolveCallerDoctorId(userId);
+        if (doctorId != null && !doctorId.equals(callerDoctorId))
+            throw new ForbiddenException("Not authorized to get those appointments");
+        return callerDoctorId;
     }
 
-    private Map<AppointmentStatus, List<AppointmentBoardItem>> groupByStatus(List<Appointment> appointments) {
-        Map<AppointmentStatus, List<AppointmentBoardItem>> board = new EnumMap<>(AppointmentStatus.class);
+    private Long resolveClientFilter(Long clientId, Long userId, String role) {
+        if (!role.equals(ERole.PATIENT.name()))
+            return clientId;
+        Long callerClientId = resolveCallerPatientId(userId);
+        if (clientId != null && !clientId.equals(callerClientId))
+            throw new ForbiddenException("Not authorized to get those appointments");
+        return callerClientId;
+    }
+
+    private Map<AppointmentStatus, List<AppointmentSummaryItem>> groupByStatus(List<Appointment> appointments) {
+        Map<AppointmentStatus, List<AppointmentSummaryItem>> board = new EnumMap<>(AppointmentStatus.class);
         for (AppointmentStatus status : AppointmentStatus.values())
             board.put(status, new ArrayList<>());
         for (Appointment appointment : appointments)
-            board.get(appointment.getStatus()).add(toBoardItem(appointment));
+            board.get(appointment.getStatus()).add(toSummaryItem(appointment));
         return board;
     }
 
-    private Map<String, List<AppointmentCalendarItem>> groupByDay(List<Appointment> appointments) {
-        Map<String, List<AppointmentCalendarItem>> calendar = new LinkedHashMap<>();
+    private Map<String, List<AppointmentSummaryItem>> groupByDay(List<Appointment> appointments) {
+        Map<String, List<AppointmentSummaryItem>> calendar = new LinkedHashMap<>();
         for (Appointment appointment : appointments) {
             String key = appointment.getSchedule().getStartTime().toLocalDate().format(CALENDAR_KEY_FORMATTER);
-            calendar.computeIfAbsent(key, k -> new ArrayList<>()).add(toCalendarItem(appointment));
+            calendar.computeIfAbsent(key, k -> new ArrayList<>()).add(toSummaryItem(appointment));
         }
         return calendar;
     }
 
-    private AppointmentBoardItem toBoardItem(Appointment appointment) {
+    private AppointmentSummaryItem toSummaryItem(Appointment appointment) {
         LocalDateTime startTime = appointment.getSchedule().getStartTime();
-        return AppointmentBoardItem.builder()
+        return AppointmentSummaryItem.builder()
                 .clientName(appointment.getPatient().getAccount().getName())
                 .doctorName(appointment.getSchedule().getDoctor().getAccount().getName())
                 .appointmentDate(startTime.toLocalDate())
                 .appointmentTime(startTime.format(TIME_FORMATTER))
-                .priority(appointment.getPriority().getDisplayName())
-                .build();
-    }
-
-    private AppointmentCalendarItem toCalendarItem(Appointment appointment) {
-        return AppointmentCalendarItem.builder()
-                .clientName(appointment.getPatient().getAccount().getName())
-                .doctorName(appointment.getSchedule().getDoctor().getAccount().getName())
-                .appointmentTime(appointment.getSchedule().getStartTime().format(TIME_FORMATTER))
-                .priority(appointment.getPriority().getDisplayName())
                 .build();
     }
 
@@ -227,5 +197,17 @@ public class AppointmentServiceImpl implements AppointmentService {
     private Patient getPatientOrThrow(Long id) {
         return patientRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Patient not found with id: " + id));
+    }
+
+    private Long resolveCallerPatientId(Long accountId) {
+        return patientRepository.findByAccount_Id(accountId)
+                .map(Patient::getId)
+                .orElse(null);
+    }
+
+    private Long resolveCallerDoctorId(Long accountId) {
+        return personalRepository.findByAccount_Id(accountId)
+                .map(Personal::getId)
+                .orElse(null);
     }
 }

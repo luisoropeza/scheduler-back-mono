@@ -22,7 +22,7 @@ public class Patient {
 
     @ManyToOne(optional = false)
     @JoinColumn(name = "patient_account_id")
-    private PatientAccount account;
+    private Account account;
 
     @TenantId
     @Column(name = "clinic_id", nullable = false, updatable = false)

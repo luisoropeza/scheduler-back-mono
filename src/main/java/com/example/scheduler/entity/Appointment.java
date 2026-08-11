@@ -1,6 +1,5 @@
 package com.example.scheduler.entity;
 
-import com.example.scheduler.enums.AppointmentPriority;
 import com.example.scheduler.enums.AppointmentStatus;
 import jakarta.persistence.*;
 import lombok.*;
@@ -37,11 +36,6 @@ public class Appointment {
     @Column(nullable = false)
     @Builder.Default
     private AppointmentStatus status = AppointmentStatus.PENDING;
-
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
-    @Builder.Default
-    private AppointmentPriority priority = AppointmentPriority.MEDIUM;
 
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;

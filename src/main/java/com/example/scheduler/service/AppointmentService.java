@@ -1,10 +1,8 @@
 package com.example.scheduler.service;
 
-import com.example.scheduler.dto.appintment.AppointmentBoardItem;
-import com.example.scheduler.dto.appintment.AppointmentCalendarItem;
-import com.example.scheduler.dto.appintment.AppointmentRequest;
-import com.example.scheduler.dto.appintment.AppointmentResponse;
-import com.example.scheduler.enums.AppointmentPriority;
+import com.example.scheduler.dto.appointment.AppointmentRequest;
+import com.example.scheduler.dto.appointment.AppointmentResponse;
+import com.example.scheduler.dto.appointment.AppointmentSummaryItem;
 import com.example.scheduler.enums.AppointmentStatus;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -16,14 +14,10 @@ import java.util.Map;
 public interface AppointmentService {
     AppointmentResponse book(AppointmentRequest request, Long userId, String role);
     AppointmentResponse findById(Long id);
-    Page<AppointmentResponse> findByClientId(Long clientId, Pageable pageable, Long userId, String role);
-    Page<AppointmentResponse> findByDoctorAndStatus(Long doctorId, AppointmentStatus status, Pageable pageable, Long userId, String role);
+    Page<AppointmentResponse> findAppointments(Long doctorId, Long clientId, AppointmentStatus status, Pageable pageable, Long userId, String role);
     AppointmentResponse confirm(Long id, Long userId, String role);
     AppointmentResponse cancel(Long id);
     AppointmentResponse reschedule(Long id, Long newScheduleId);
-    AppointmentResponse setPriority(Long id, AppointmentPriority priority, Long userId, String role);
-    Map<AppointmentStatus, List<AppointmentBoardItem>> getDoctorBoardByRange(Long doctorId, LocalDate from, LocalDate to, Long userId, String role);
-    Map<AppointmentStatus, List<AppointmentBoardItem>> getClientBoardByRange(Long clientId, LocalDate from, LocalDate to, Long userId, String role);
-    Map<String, List<AppointmentCalendarItem>> getDoctorCalendar(Long doctorId, int month, int year, Long userId, String role);
-    Map<String, List<AppointmentCalendarItem>> getClientCalendar(Long clientId, int month, int year, Long userId, String role);
+    Map<AppointmentStatus, List<AppointmentSummaryItem>> getBoardByRange(LocalDate from, LocalDate to, Long doctorId, Long clientId, Long userId, String role);
+    Map<String, List<AppointmentSummaryItem>> getCalendar(int month, int year, Long doctorId, Long clientId, Long userId, String role);
 }

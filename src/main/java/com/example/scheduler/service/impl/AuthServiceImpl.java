@@ -4,19 +4,17 @@ import com.example.scheduler.dto.login.LoginRequest;
 import com.example.scheduler.dto.login.LoginResponse;
 import com.example.scheduler.dto.patient.PatientRegisterRequest;
 import com.example.scheduler.dto.personal.PersonalRegisterRequest;
+import com.example.scheduler.entity.Account;
 import com.example.scheduler.entity.Patient;
-import com.example.scheduler.entity.PatientAccount;
 import com.example.scheduler.entity.Personal;
-import com.example.scheduler.entity.PersonalAccount;
 import com.example.scheduler.entity.Role;
 import com.example.scheduler.entity.Specialty;
 import com.example.scheduler.enums.ERole;
 import com.example.scheduler.exception.BusinessException;
 import com.example.scheduler.exception.ResourceNotFoundException;
 import com.example.scheduler.exception.UnauthorizedException;
-import com.example.scheduler.repository.PatientAccountRepository;
+import com.example.scheduler.repository.AccountRepository;
 import com.example.scheduler.repository.PatientRepository;
-import com.example.scheduler.repository.PersonalAccountRepository;
 import com.example.scheduler.repository.PersonalRepository;
 import com.example.scheduler.repository.RoleRepository;
 import com.example.scheduler.repository.SpecialtyRepository;
@@ -30,12 +28,10 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 @RequiredArgsConstructor
 public class AuthServiceImpl implements AuthService {
-    public static final String PATIENT_ROLE = "PATIENT";
 
     private final PatientRepository patientRepository;
-    private final PatientAccountRepository patientAccountRepository;
     private final PersonalRepository personalRepository;
-    private final PersonalAccountRepository personalAccountRepository;
+    private final AccountRepository accountRepository;
     private final SpecialtyRepository specialtyRepository;
     private final RoleRepository roleRepository;
     private final BCryptPasswordEncoder passwordEncoder;
@@ -44,20 +40,22 @@ public class AuthServiceImpl implements AuthService {
     @Override
     @Transactional
     public void registerPatient(PatientRegisterRequest request) {
-        if (personalAccountRepository.findByEmail(request.getEmail()).isPresent())
-            throw new BusinessException("Email already registered");
+        Role patientRole = getOrCreateRole(ERole.PATIENT);
 
-        PatientAccount account = patientAccountRepository.findByEmail(request.getEmail())
+        Account account = accountRepository.findByEmail(request.getEmail())
                 .map(existing -> {
+                    if (existing.getRole().getName() != ERole.PATIENT)
+                        throw new BusinessException("Email already registered");
                     if (!passwordEncoder.matches(request.getPassword(), existing.getPassword()))
                         throw new UnauthorizedException("Invalid credentials");
                     return existing;
                 })
-                .orElseGet(() -> patientAccountRepository.save(PatientAccount.builder()
+                .orElseGet(() -> accountRepository.save(Account.builder()
                         .name(request.getName())
                         .email(request.getEmail())
                         .password(passwordEncoder.encode(request.getPassword()))
                         .phoneNumber(request.getPhoneNumber())
+                        .role(patientRole)
                         .build()));
 
         if (patientRepository.findByAccount_Id(account.getId()).isPresent())
@@ -68,29 +66,29 @@ public class AuthServiceImpl implements AuthService {
 
     @Override
     public LoginResponse loginPatient(LoginRequest request) {
-        PatientAccount account = patientAccountRepository.findByEmail(request.getEmail())
+        Account account = accountRepository.findByEmail(request.getEmail())
+                .filter(a -> a.getRole().getName() == ERole.PATIENT)
                 .orElseThrow(() -> new UnauthorizedException("Invalid credentials"));
         if (!passwordEncoder.matches(request.getPassword(), account.getPassword())) {
             throw new UnauthorizedException("Invalid credentials");
         }
-        return new LoginResponse(jwtUtil.generate(account.getId(), PATIENT_ROLE));
+        return new LoginResponse(jwtUtil.generate(account.getId(), account.getRole().getName().name()));
     }
 
     @Override
     @Transactional
     public void registerPersonal(PersonalRegisterRequest request) {
-        if (patientAccountRepository.findByEmail(request.getEmail()).isPresent())
-            throw new BusinessException("Email already registered");
-
         Role role = getRoleOrThrow(request.getRoleId());
 
-        PersonalAccount account = personalAccountRepository.findByEmail(request.getEmail())
+        Account account = accountRepository.findByEmail(request.getEmail())
                 .map(existing -> {
+                    if (existing.getRole().getName() == ERole.PATIENT)
+                        throw new BusinessException("Email already registered");
                     if (!passwordEncoder.matches(request.getPassword(), existing.getPassword()))
                         throw new UnauthorizedException("Invalid credentials");
                     return existing;
                 })
-                .orElseGet(() -> personalAccountRepository.save(PersonalAccount.builder()
+                .orElseGet(() -> accountRepository.save(Account.builder()
                         .name(request.getName())
                         .email(request.getEmail())
                         .role(role)
@@ -102,7 +100,7 @@ public class AuthServiceImpl implements AuthService {
 
         Personal personal = Personal.builder().account(account).build();
         if (request.getSpecialtyId() != null)
-            if(role.getName().equals(ERole.DOCTOR.name()))
+            if(role.getName() == ERole.DOCTOR)
                 personal.setSpecialty(getSpecialtyOrThrow(request.getSpecialtyId()));
             else
                 throw new BusinessException(String.format("this %s does not have a specialty assigned", role.getName()));
@@ -111,12 +109,13 @@ public class AuthServiceImpl implements AuthService {
 
     @Override
     public LoginResponse loginPersonal(LoginRequest request) {
-        PersonalAccount account = personalAccountRepository.findByEmail(request.getEmail())
+        Account account = accountRepository.findByEmail(request.getEmail())
+                .filter(a -> a.getRole().getName() != ERole.PATIENT)
                 .orElseThrow(() -> new UnauthorizedException("Invalid credentials"));
         if (!passwordEncoder.matches(request.getPassword(), account.getPassword())) {
             throw new UnauthorizedException("Invalid credentials");
         }
-        return new LoginResponse(jwtUtil.generate(account.getId(), account.getRole().getName()));
+        return new LoginResponse(jwtUtil.generate(account.getId(), account.getRole().getName().name()));
     }
 
     private Specialty getSpecialtyOrThrow(Long id) {
@@ -127,5 +126,10 @@ public class AuthServiceImpl implements AuthService {
     private Role getRoleOrThrow(Long id) {
         return roleRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Role not found: " + id));
+    }
+
+    private Role getOrCreateRole(ERole name) {
+        return roleRepository.findByName(name)
+                .orElseGet(() -> roleRepository.save(Role.builder().name(name).build()));
     }
 }

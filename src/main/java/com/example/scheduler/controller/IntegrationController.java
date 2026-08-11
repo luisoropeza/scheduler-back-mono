@@ -1,7 +1,7 @@
 package com.example.scheduler.controller;
 
-import com.example.scheduler.dto.appintment.AppointmentRequest;
-import com.example.scheduler.dto.appintment.AppointmentResponse;
+import com.example.scheduler.dto.appointment.AppointmentRequest;
+import com.example.scheduler.dto.appointment.AppointmentResponse;
 import com.example.scheduler.dto.clinic.ClinicResponse;
 import com.example.scheduler.dto.patient.PatientResponse;
 import com.example.scheduler.dto.personal.PersonalResponse;
@@ -89,7 +89,8 @@ public class IntegrationController {
     @PostMapping("/appointments")
     @Operation(summary = "POST /api/integrations/n8n/appointments — book a schedule slot for the patient identified by phoneNumber")
     public ResponseEntity<AppointmentResponse> book(@Valid @RequestBody AppointmentRequest request) {
+        Long accountId = patientService.findById(request.getClientId()).getAccountId();
         return ResponseEntity.status(HttpStatus.CREATED)
-                .body(appointmentService.book(request, request.getClientId(), ERole.PATIENT.name()));
+                .body(appointmentService.book(request, accountId, ERole.PATIENT.name()));
     }
 }

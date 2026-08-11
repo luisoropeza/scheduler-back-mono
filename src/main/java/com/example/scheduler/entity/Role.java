@@ -1,5 +1,6 @@
 package com.example.scheduler.entity;
 
+import com.example.scheduler.enums.ERole;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -16,6 +17,7 @@ public class Role {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Enumerated(EnumType.STRING)
     @Column(nullable = false, unique = true)
-    private String name;
+    private ERole name;
 }

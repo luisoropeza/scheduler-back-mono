@@ -45,9 +45,9 @@ public class PatientServiceImpl implements PatientService {
     @Override
     @Transactional
     public PatientResponse update(Long id, PatientRequest request, Long userId) {
-        if (!id.equals(userId))
-            throw new ForbiddenException("This user does not authorize to update this user");
         Patient patient = getOrThrow(id);
+        if (!patient.getAccount().getId().equals(userId))
+            throw new ForbiddenException("This user does not authorize to update this user");
         patientMapper.toEntityUpdated(request, patient);
         return patientMapper.toResponse(patientRepository.save(patient));
     }

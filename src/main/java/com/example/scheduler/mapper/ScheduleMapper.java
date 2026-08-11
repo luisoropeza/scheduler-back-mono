@@ -13,6 +13,7 @@ public interface ScheduleMapper {
     @Mapping(target = "doctorName", source = "doctor.account.name")
     @Mapping(target = "doctorSpecialty", source = "doctor.specialty.name")
     @Mapping(target = "doctorEmail", source = "doctor.account.email")
+    @Mapping(target = "status", expression = "java(schedule.getStatus().getDisplayName())")
     ScheduleResponse toResponse(Schedule schedule);
     List<ScheduleResponse> toResponseList(List<Schedule> schedules);
 }

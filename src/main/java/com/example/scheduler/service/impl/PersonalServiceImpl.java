@@ -70,7 +70,7 @@ public class PersonalServiceImpl implements PersonalService {
     public void assignPatient(Long doctorId, Long patientId, Long userId, String role) {
         Personal doctor = getOrThrow(doctorId);
         if (role.equals(ERole.DOCTOR.name()))
-            if(!doctorId.equals(userId))
+            if(!doctor.getAccount().getId().equals(userId))
                 throw new ForbiddenException("this user cannot assign this patient");
         Patient patient = getPatientOrThrow(patientId);
         if (!doctor.getPatients().contains(patient)) {
@@ -84,7 +84,7 @@ public class PersonalServiceImpl implements PersonalService {
     public void removePatient(Long doctorId, Long patientId, Long userId, String role) {
         Personal doctor = getOrThrow(doctorId);
         if (role.equals(ERole.DOCTOR.name()))
-            if(!doctorId.equals(userId))
+            if(!doctor.getAccount().getId().equals(userId))
                 throw new ForbiddenException("this user cannot remove this patient");
         Patient patient = getPatientOrThrow(patientId);
         if (doctor.getPatients().contains(patient)) {

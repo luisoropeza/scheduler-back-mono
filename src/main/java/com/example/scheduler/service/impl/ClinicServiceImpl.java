@@ -4,14 +4,14 @@ import com.example.scheduler.config.tenant.TenantContext;
 import com.example.scheduler.dto.clinic.ClinicRequest;
 import com.example.scheduler.dto.clinic.ClinicResponse;
 import com.example.scheduler.dto.personal.PersonalRegisterRequest;
+import com.example.scheduler.entity.Account;
 import com.example.scheduler.entity.Clinic;
-import com.example.scheduler.entity.PatientAccount;
 import com.example.scheduler.entity.Role;
 import com.example.scheduler.enums.ERole;
 import com.example.scheduler.exception.ResourceNotFoundException;
 import com.example.scheduler.mapper.ClinicMapper;
+import com.example.scheduler.repository.AccountRepository;
 import com.example.scheduler.repository.ClinicRepository;
-import com.example.scheduler.repository.PatientAccountRepository;
 import com.example.scheduler.repository.PatientRepository;
 import com.example.scheduler.repository.PersonalRepository;
 import com.example.scheduler.repository.RoleRepository;
@@ -32,7 +32,7 @@ public class ClinicServiceImpl implements ClinicService {
     private final AuthService authService;
     private final PatientRepository patientRepository;
     private final PersonalRepository personalRepository;
-    private final PatientAccountRepository patientAccountRepository;
+    private final AccountRepository accountRepository;
 
     @Override
     @Transactional
@@ -40,14 +40,15 @@ public class ClinicServiceImpl implements ClinicService {
         Clinic clinic = clinicRepository.save(clinicMapper.toEntity(request));
         try {
             TenantContext.setCurrentTenant(clinic.getId().toString());
-            Role adminRole = roleRepository.findByName(ERole.ADMINISTRATOR.name())
-                    .orElseGet(() -> roleRepository.save(Role.builder().name(ERole.ADMINISTRATOR.name()).build()));
+            Role adminRole = roleRepository.findByName(ERole.ADMINISTRATOR)
+                    .orElseGet(() -> roleRepository.save(Role.builder().name(ERole.ADMINISTRATOR).build()));
 
-            PersonalRegisterRequest adminRequest = new PersonalRegisterRequest();
-            adminRequest.setName(request.getAdminName());
-            adminRequest.setEmail(request.getAdminEmail());
-            adminRequest.setPassword(request.getAdminPassword());
-            adminRequest.setRoleId(adminRole.getId());
+            PersonalRegisterRequest adminRequest = PersonalRegisterRequest.builder()
+                    .name(request.getAdminName())
+                    .email(request.getAdminEmail())
+                    .password(request.getAdminPassword())
+                    .roleId(adminRole.getId())
+                    .build();
             authService.registerPersonal(adminRequest);
         } finally {
             TenantContext.clear();
@@ -73,7 +74,7 @@ public class ClinicServiceImpl implements ClinicService {
 
     @Override
     public List<ClinicResponse> findByPatientPhoneNumber(String phoneNumber) {
-        PatientAccount account = patientAccountRepository.findByPhoneNumber(phoneNumber)
+        Account account = accountRepository.findByPhoneNumber(phoneNumber)
                 .orElseThrow(() -> new ResourceNotFoundException("Patient not found with phone number: " + phoneNumber));
         return findByPatientAccountId(account.getId());
     }

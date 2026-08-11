@@ -9,6 +9,7 @@ import java.util.List;
 
 @Mapper(componentModel = "spring")
 public interface PatientMapper {
+    @Mapping(source = "account.id", target = "accountId")
     @Mapping(source = "account.name", target = "name")
     @Mapping(source = "account.email", target = "email")
     @Mapping(source = "account.phoneNumber", target = "phoneNumber")

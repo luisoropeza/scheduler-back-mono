@@ -10,8 +10,8 @@ import lombok.*;
 @Builder
 @EqualsAndHashCode(of = "id")
 @Entity
-@Table(name = "patient_accounts")
-public class PatientAccount {
+@Table(name = "accounts")
+public class Account {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -27,4 +27,8 @@ public class PatientAccount {
 
     @Column(unique = true)
     private String phoneNumber;
+
+    @ManyToOne(optional = false)
+    @JoinColumn(name = "role_id")
+    private Role role;
 }

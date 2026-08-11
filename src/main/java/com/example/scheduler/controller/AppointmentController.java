@@ -1,10 +1,8 @@
 package com.example.scheduler.controller;
 
-import com.example.scheduler.dto.appintment.AppointmentBoardItem;
-import com.example.scheduler.dto.appintment.AppointmentCalendarItem;
-import com.example.scheduler.dto.appintment.AppointmentPriorityRequest;
-import com.example.scheduler.dto.appintment.AppointmentRequest;
-import com.example.scheduler.dto.appintment.AppointmentResponse;
+import com.example.scheduler.dto.appointment.AppointmentRequest;
+import com.example.scheduler.dto.appointment.AppointmentResponse;
+import com.example.scheduler.dto.appointment.AppointmentSummaryItem;
 import com.example.scheduler.enums.AppointmentStatus;
 import com.example.scheduler.security.SecurityUtils;
 import com.example.scheduler.service.AppointmentService;
@@ -35,11 +33,6 @@ import java.util.Map;
 public class AppointmentController {
     private final AppointmentService appointmentService;
 
-
-    //-------------------------
-
-    //-------------------------
-
     @PostMapping
     @Operation(summary = "POST /api/appointments — book an appointment for a patient on a given schedule slot")
     public ResponseEntity<AppointmentResponse> book(@Valid @RequestBody AppointmentRequest request, Authentication auth) {
@@ -52,26 +45,16 @@ public class AppointmentController {
         return ResponseEntity.ok(appointmentService.findById(id));
     }
 
-    @GetMapping("/client/{clientId}")
-    @Operation(summary = "GET /api/appointments/client/{clientId} — list all appointments for a patient")
-    public ResponseEntity<Page<AppointmentResponse>> findByClient(
-            @PathVariable Long clientId,
-            @PageableDefault(sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable,
-            Authentication auth
-    ) {
-        return ResponseEntity.ok(appointmentService.findByClientId(clientId, pageable, Long.parseLong(auth.getName()), SecurityUtils.extractRole(auth)));
-    }
-
-    @GetMapping("/personal/{doctorId}")
-    @PreAuthorize("hasAnyRole('DOCTOR', 'RECEPTIONIST')")
-    @Operation(summary = "GET /api/appointments/personal/{doctorId} — list all appointments for a personal, filter by ?status={status}")
-    public ResponseEntity<Page<AppointmentResponse>> findByDoctorAndStatus(
-            @PathVariable Long doctorId,
+    @GetMapping
+    @Operation(summary = "GET /api/appointments — list appointments, filtered by ?doctorId={id}&clientId={id}&status={status} (all optional; DOCTOR/PATIENT callers are scoped to themselves, RECEPTIONIST can filter freely or omit both for a clinic-wide list)")
+    public ResponseEntity<Page<AppointmentResponse>> findAppointments(
+            @RequestParam(required = false) Long doctorId,
+            @RequestParam(required = false) Long clientId,
             @RequestParam(required = false) AppointmentStatus status,
             @PageableDefault(sort = "schedule.startTime", direction = Sort.Direction.ASC) Pageable pageable,
             Authentication auth
     ) {
-        return ResponseEntity.ok(appointmentService.findByDoctorAndStatus(doctorId, status, pageable, Long.parseLong(auth.getName()), SecurityUtils.extractRole(auth)));
+        return ResponseEntity.ok(appointmentService.findAppointments(doctorId, clientId, status, pageable, Long.parseLong(auth.getName()), SecurityUtils.extractRole(auth)));
     }
 
     @PatchMapping("/{id}/confirm")
@@ -100,55 +83,25 @@ public class AppointmentController {
         return ResponseEntity.ok(appointmentService.reschedule(id, body.getScheduleId()));
     }
 
-    @PatchMapping("/{id}/priority")
-    @PreAuthorize("hasAnyRole('DOCTOR', 'RECEPTIONIST')")
-    @Operation(summary = "PATCH /api/appointments/{id}/priority — set an appointment's priority (body: {priority})")
-    public ResponseEntity<AppointmentResponse> setPriority(
-            @PathVariable Long id,
-            @Valid @RequestBody AppointmentPriorityRequest body,
-            Authentication auth) {
-        return ResponseEntity.ok(appointmentService.setPriority(id, body.getPriority(), Long.parseLong(auth.getName()), SecurityUtils.extractRole(auth)));
-    }
-
-    @GetMapping("/personal/{doctorId}/board")
-    @PreAuthorize("hasAnyRole('DOCTOR', 'RECEPTIONIST')")
-    @Operation(summary = "GET /api/appointments/personal/{doctorId}/board — appointments for a personal grouped by status, filtered by ?from={date}&to={date}")
-    public ResponseEntity<Map<AppointmentStatus, List<AppointmentBoardItem>>> getDoctorBoardByRange(
-            @PathVariable Long doctorId,
+    @GetMapping("/board")
+    @Operation(summary = "GET /api/appointments/board — appointments grouped by status, filtered by ?from={date}&to={date}&doctorId={id}&clientId={id} (doctorId/clientId optional; DOCTOR/PATIENT callers are scoped to themselves, RECEPTIONIST can filter freely or omit both for a clinic-wide view)")
+    public ResponseEntity<Map<AppointmentStatus, List<AppointmentSummaryItem>>> getBoardByRange(
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to,
+            @RequestParam(required = false) Long doctorId,
+            @RequestParam(required = false) Long clientId,
             Authentication auth) {
-        return ResponseEntity.ok(appointmentService.getDoctorBoardByRange(doctorId, from, to, Long.parseLong(auth.getName()), SecurityUtils.extractRole(auth)));
+        return ResponseEntity.ok(appointmentService.getBoardByRange(from, to, doctorId, clientId, Long.parseLong(auth.getName()), SecurityUtils.extractRole(auth)));
     }
 
-    @GetMapping("/client/{clientId}/board")
-    @Operation(summary = "GET /api/appointments/client/{clientId}/board — appointments for a patient grouped by status, filtered by ?from={date}&to={date}")
-    public ResponseEntity<Map<AppointmentStatus, List<AppointmentBoardItem>>> getClientBoardByRange(
-            @PathVariable Long clientId,
-            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
-            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to,
-            Authentication auth) {
-        return ResponseEntity.ok(appointmentService.getClientBoardByRange(clientId, from, to, Long.parseLong(auth.getName()), SecurityUtils.extractRole(auth)));
-    }
-
-    @GetMapping("/personal/{doctorId}/calendar")
-    @PreAuthorize("hasAnyRole('DOCTOR', 'RECEPTIONIST')")
-    @Operation(summary = "GET /api/appointments/personal/{doctorId}/calendar — appointments for a personal grouped by day, filtered by ?month={month}&year={year}")
-    public ResponseEntity<Map<String, List<AppointmentCalendarItem>>> getDoctorCalendar(
-            @PathVariable Long doctorId,
+    @GetMapping("/calendar")
+    @Operation(summary = "GET /api/appointments/calendar — appointments grouped by day, filtered by ?month={month}&year={year}&doctorId={id}&clientId={id} (doctorId/clientId optional; DOCTOR/PATIENT callers are scoped to themselves, RECEPTIONIST can filter freely or omit both for a clinic-wide view)")
+    public ResponseEntity<Map<String, List<AppointmentSummaryItem>>> getCalendar(
             @RequestParam int month,
             @RequestParam int year,
+            @RequestParam(required = false) Long doctorId,
+            @RequestParam(required = false) Long clientId,
             Authentication auth) {
-        return ResponseEntity.ok(appointmentService.getDoctorCalendar(doctorId, month, year, Long.parseLong(auth.getName()), SecurityUtils.extractRole(auth)));
-    }
-
-    @GetMapping("/client/{clientId}/calendar")
-    @Operation(summary = "GET /api/appointments/client/{clientId}/calendar — appointments for a patient grouped by day, filtered by ?month={month}&year={year}")
-    public ResponseEntity<Map<String, List<AppointmentCalendarItem>>> getClientCalendar(
-            @PathVariable Long clientId,
-            @RequestParam int month,
-            @RequestParam int year,
-            Authentication auth) {
-        return ResponseEntity.ok(appointmentService.getClientCalendar(clientId, month, year, Long.parseLong(auth.getName()), SecurityUtils.extractRole(auth)));
+        return ResponseEntity.ok(appointmentService.getCalendar(month, year, doctorId, clientId, Long.parseLong(auth.getName()), SecurityUtils.extractRole(auth)));
     }
 }

@@ -22,7 +22,7 @@ public class Personal {
 
     @ManyToOne(optional = false)
     @JoinColumn(name = "personal_account_id")
-    private PersonalAccount account;
+    private Account account;
 
     @ManyToOne
     @JoinColumn(name = "specialty_id")
