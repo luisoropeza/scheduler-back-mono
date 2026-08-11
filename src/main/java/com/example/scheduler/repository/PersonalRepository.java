@@ -16,7 +16,13 @@ public interface PersonalRepository extends JpaRepository<Personal, Long> {
             "p.account.role.name = 'DOCTOR' AND " +
             "(:specialtyId IS NULL OR p.specialty.id = :specialtyId) AND " +
             "(:isActive IS NULL OR p.active = :isActive)")
-    Page<Personal> findAllByFilters(@Param("specialtyId") Long specialtyId, @Param("isActive") Boolean isActive, Pageable pageable);
+    Page<Personal> findAllDoctorsByFilters(@Param("specialtyId") Long specialtyId, @Param("isActive") Boolean isActive, Pageable pageable);
+
+    @Query("SELECT p FROM Personal p WHERE " +
+            "(:role IS NULL OR p.account.role.name = :role) AND " +
+            "(:specialtyId IS NULL OR p.specialty.id = :specialtyId) AND " +
+            "(:isActive IS NULL OR p.active = :isActive)")
+    Page<Personal> findAllByFilters(@Param("specialtyId") Long specialtyId, @Param("isActive") Boolean isActive, @Param("role") String role, Pageable pageable);
     Optional<Personal> findByAccount_Id(Long accountId);
     boolean existsByAccount_Id(Long accountId);
 

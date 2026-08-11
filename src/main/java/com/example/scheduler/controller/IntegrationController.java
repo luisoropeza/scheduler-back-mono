@@ -68,7 +68,7 @@ public class IntegrationController {
             @RequestParam Long specialtyId,
             @PageableDefault(sort = "id", direction = Sort.Direction.ASC) Pageable pageable
     ) {
-        return ResponseEntity.ok(personalService.findAll(specialtyId, true, pageable));
+        return ResponseEntity.ok(personalService.findAllDoctors(specialtyId, true, pageable));
     }
 
     @GetMapping("/schedules")

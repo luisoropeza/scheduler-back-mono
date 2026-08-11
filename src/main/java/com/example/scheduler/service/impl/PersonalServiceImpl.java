@@ -37,10 +37,18 @@ public class PersonalServiceImpl implements PersonalService {
     private final PatientMapper patientMapper;
 
     @Override
-    public Page<PersonalResponse> findAll(Long specialtyId, Boolean isActive, Pageable pageable) {
+    public Page<PersonalResponse> findAllDoctors(Long specialtyId, Boolean isActive, Pageable pageable) {
         if (specialtyId != null) specialtyRepository.findById(specialtyId)
                 .orElseThrow(() -> new ResourceNotFoundException("Specialty not found: " + specialtyId));
-        return personalRepository.findAllByFilters(specialtyId, isActive, pageable)
+        return personalRepository.findAllDoctorsByFilters(specialtyId, isActive, pageable)
+                .map(personalMapper::toResponse);
+    }
+
+    @Override
+    public Page<PersonalResponse> findAll(Long specialtyId, Boolean isActive, String role, Pageable pageable) {
+        if (specialtyId != null) specialtyRepository.findById(specialtyId)
+                .orElseThrow(() -> new ResourceNotFoundException("Specialty not found: " + specialtyId));
+        return personalRepository.findAllByFilters(specialtyId, isActive, role, pageable)
                 .map(personalMapper::toResponse);
     }
 

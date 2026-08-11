@@ -9,7 +9,8 @@ import org.springframework.data.domain.Pageable;
 import java.util.List;
 
 public interface PersonalService {
-    Page<PersonalResponse> findAll(Long specialtyId, Boolean isActive, Pageable pageable);
+    Page<PersonalResponse> findAllDoctors(Long specialtyId, Boolean isActive, Pageable pageable);
+    Page<PersonalResponse> findAll(Long specialtyId, Boolean isActive, String role, Pageable pageable);
     PersonalResponse findById(Long id);
     PersonalResponse update(Long id, PersonalRequest request);
     void deactivate(Long id);

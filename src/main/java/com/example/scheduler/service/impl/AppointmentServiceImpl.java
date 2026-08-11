@@ -169,7 +169,7 @@ public class AppointmentServiceImpl implements AppointmentService {
         Map<String, List<AppointmentSummaryItem>> calendar = new LinkedHashMap<>();
         for (Appointment appointment : appointments) {
             String key = appointment.getSchedule().getStartTime().toLocalDate().format(CALENDAR_KEY_FORMATTER);
-            calendar.computeIfAbsent(key, k -> new ArrayList<>()).add(toSummaryItem(appointment));
+            calendar.computeIfAbsent(key, _ -> new ArrayList<>()).add(toSummaryItem(appointment));
         }
         return calendar;
     }

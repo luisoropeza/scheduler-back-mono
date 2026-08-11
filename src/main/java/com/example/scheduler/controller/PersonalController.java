@@ -27,14 +27,26 @@ import java.util.List;
 public class PersonalController {
     private final PersonalService personalService;
 
-    @GetMapping
-    @Operation(summary = "GET /api/personal — list staff members, filter by ?specialtyId={specialtyId}?isActive={isActive}")
-    public ResponseEntity<Page<PersonalResponse>> findAll(
+    @GetMapping("/doctors")
+    @Operation(summary = "GET /api/personal/doctors — list staff members, filter by ?specialtyId={specialtyId}?isActive={isActive}")
+    public ResponseEntity<Page<PersonalResponse>> findAllDoctors(
             @RequestParam(required = false) Long specialtyId,
             @RequestParam(required = false) Boolean isActive,
             @PageableDefault(sort = "id", direction = Sort.Direction.ASC) Pageable pageable
     ) {
-        return ResponseEntity.ok(personalService.findAll(specialtyId, isActive, pageable));
+        return ResponseEntity.ok(personalService.findAllDoctors(specialtyId, isActive, pageable));
+    }
+
+    @GetMapping
+    @PreAuthorize("hasAnyRole('DOCTOR', 'RECEPTIONIST')")
+    @Operation(summary = "GET /api/personal — list staff of any role, filter by ?specialtyId={specialtyId}&isActive={isActive}&role={role}")
+    public ResponseEntity<Page<PersonalResponse>> findAll(
+            @RequestParam(required = false) Long specialtyId,
+            @RequestParam(required = false) Boolean isActive,
+            @RequestParam(required = false) String role,
+            @PageableDefault(sort = "id", direction = Sort.Direction.ASC) Pageable pageable
+    ) {
+        return ResponseEntity.ok(personalService.findAll(specialtyId, isActive, role, pageable));
     }
 
     @GetMapping("/{id}")
