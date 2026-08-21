@@ -10,9 +10,9 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 public interface ScheduleService {
-    Page<ScheduleResponse> findAll(Long doctorId, Long specialtyId, ScheduleStatus status, LocalDateTime after, Pageable pageable);
-    ScheduleResponse findById(Long id);
-    ScheduleResponse create(Long doctorId, ScheduleRequest request);
-    List<ScheduleResponse> createBatch(Long doctorId, List<ScheduleRequest> requests);
-    void delete(Long scheduleId, Long doctorId);
+    Page<ScheduleResponse> findAllSchedules(Long doctorId, Long specialtyId, ScheduleStatus status, LocalDateTime after, Pageable pageable);
+    ScheduleResponse findScheduleById(Long scheduleId, Long userId, String role);
+    ScheduleResponse createSchedule(Long doctorId, ScheduleRequest request);
+    List<ScheduleResponse> createSchedulesBatch(Long doctorId, List<ScheduleRequest> requests);
+    void deleteSchedule(Long doctorId, Long scheduleId);
 }

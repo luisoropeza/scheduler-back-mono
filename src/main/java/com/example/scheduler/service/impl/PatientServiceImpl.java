@@ -4,7 +4,6 @@ import com.example.scheduler.dto.patient.PatientRequest;
 import com.example.scheduler.dto.patient.PatientResponse;
 import com.example.scheduler.dto.personal.PersonalResponse;
 import com.example.scheduler.entity.Patient;
-import com.example.scheduler.exception.ForbiddenException;
 import com.example.scheduler.exception.ResourceNotFoundException;
 import com.example.scheduler.mapper.PatientMapper;
 import com.example.scheduler.mapper.PersonalMapper;
@@ -27,47 +26,52 @@ public class PatientServiceImpl implements PatientService {
     private final PersonalMapper personalMapper;
 
     @Override
-    public Page<PatientResponse> findAll(Pageable pageable) {
+    public Page<PatientResponse> findAllPatients(Pageable pageable) {
         return patientRepository.findAll(pageable).map(patientMapper::toResponse);
     }
 
     @Override
-    public PatientResponse findById(Long id) {
-        return patientMapper.toResponse(getOrThrow(id));
+    public PatientResponse findPatientById(Long id) {
+        return patientMapper.toResponse(getPatientOrThrow(id));
     }
 
     @Override
-    public PatientResponse findByPhoneNumber(String phoneNumber) {
-        return patientMapper.toResponse(patientRepository.findByAccount_PhoneNumber(phoneNumber)
-                .orElseThrow(() -> new ResourceNotFoundException("Patient not found with phone number: " + phoneNumber)));
+    public PatientResponse findPatientByPhoneNumber(String phoneNumber) {
+        return patientMapper.toResponse(patientRepository.findByAccountPhoneNumber(phoneNumber)
+                .orElseThrow(() -> new ResourceNotFoundException("No se encontro el paciente con el numero telefonico: " + phoneNumber)));
     }
 
     @Override
     @Transactional
-    public PatientResponse update(Long id, PatientRequest request, Long userId) {
-        Patient patient = getOrThrow(id);
-        if (!patient.getAccount().getId().equals(userId))
-            throw new ForbiddenException("This user does not authorize to update this user");
+    public PatientResponse updatePatientById(Long id, PatientRequest request) {
+        Patient patient = getPatientOrThrow(id);
         patientMapper.toEntityUpdated(request, patient);
         return patientMapper.toResponse(patientRepository.save(patient));
     }
 
     @Override
     @Transactional
-    public void deactivate(Long id) {
-        Patient patient = getOrThrow(id);
+    public void deactivatePatientById(Long id) {
+        Patient patient = getPatientOrThrow(id);
         patient.setActive(false);
         patientRepository.save(patient);
     }
 
     @Override
     public List<PersonalResponse> getDoctorsOfPatient(Long patientId) {
-        Patient patient = getOrThrow(patientId);
+        Patient patient = getPatientOrThrow(patientId);
         return personalMapper.toResponseList(patient.getDoctors());
     }
 
-    private Patient getOrThrow(Long id) {
+    @Override
+    public PatientResponse findBySelf(Long accountId) {
+        Patient patient = patientRepository.findByAccountId(accountId)
+                .orElseThrow(() -> new ResourceNotFoundException("No se encontro el paciente con el accountId: " + accountId));
+        return patientMapper.toResponse(patient);
+    }
+
+    private Patient getPatientOrThrow(Long id) {
         return patientRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Patient not found with id: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("No se encontro el paciente con el id: " + id));
     }
 }

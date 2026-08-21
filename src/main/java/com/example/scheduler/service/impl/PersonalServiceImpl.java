@@ -1,12 +1,11 @@
 package com.example.scheduler.service.impl;
 
 import com.example.scheduler.dto.patient.PatientResponse;
+import com.example.scheduler.dto.personal.AssignAndRemoveRequest;
 import com.example.scheduler.dto.personal.PersonalRequest;
 import com.example.scheduler.dto.personal.PersonalResponse;
 import com.example.scheduler.entity.Patient;
 import com.example.scheduler.entity.Personal;
-import com.example.scheduler.entity.Role;
-import com.example.scheduler.entity.Specialty;
 import com.example.scheduler.enums.ERole;
 import com.example.scheduler.exception.ForbiddenException;
 import com.example.scheduler.exception.ResourceNotFoundException;
@@ -38,49 +37,46 @@ public class PersonalServiceImpl implements PersonalService {
 
     @Override
     public Page<PersonalResponse> findAllDoctors(Long specialtyId, Boolean isActive, Pageable pageable) {
-        if (specialtyId != null) specialtyRepository.findById(specialtyId)
-                .orElseThrow(() -> new ResourceNotFoundException("Specialty not found: " + specialtyId));
+        getSpecialtyOrThrow(specialtyId);
         return personalRepository.findAllDoctorsByFilters(specialtyId, isActive, pageable)
                 .map(personalMapper::toResponse);
     }
 
     @Override
-    public Page<PersonalResponse> findAll(Long specialtyId, Boolean isActive, String role, Pageable pageable) {
-        if (specialtyId != null) specialtyRepository.findById(specialtyId)
-                .orElseThrow(() -> new ResourceNotFoundException("Specialty not found: " + specialtyId));
-        return personalRepository.findAllByFilters(specialtyId, isActive, role, pageable)
+    public Page<PersonalResponse> findAllPersonal(Long specialtyId, Boolean isActive, Long roleId, Pageable pageable) {
+        getSpecialtyOrThrow(specialtyId);
+        getRoleOrThrow(roleId);
+        return personalRepository.findAllByFilters(specialtyId, isActive, roleId, pageable)
                 .map(personalMapper::toResponse);
     }
 
     @Override
-    public PersonalResponse findById(Long id) {
-        return personalMapper.toResponse(getOrThrow(id));
+    public PersonalResponse findPersonalById(Long personalId) {
+        return personalMapper.toResponse(getPersonalOrThrow(personalId));
     }
 
     @Override
     @Transactional
-    public PersonalResponse update(Long id, PersonalRequest request) {
-        Personal personal = getOrThrow(id);
+    public PersonalResponse updatePersonalById(Long personalId, PersonalRequest request) {
+        Personal personal = getPersonalOrThrow(personalId);
         personalMapper.toEntityUpdated(request, personal);
         return personalMapper.toResponse(personalRepository.save(personal));
     }
 
     @Override
     @Transactional
-    public void deactivate(Long id) {
-        Personal personal = getOrThrow(id);
+    public void deactivatePersonalById(Long personalId) {
+        Personal personal = getPersonalOrThrow(personalId);
         personal.setActive(false);
         personalRepository.save(personal);
     }
 
     @Override
     @Transactional
-    public void assignPatient(Long doctorId, Long patientId, Long userId, String role) {
-        Personal doctor = getOrThrow(doctorId);
-        if (role.equals(ERole.DOCTOR.name()))
-            if(!doctor.getAccount().getId().equals(userId))
-                throw new ForbiddenException("this user cannot assign this patient");
-        Patient patient = getPatientOrThrow(patientId);
+    public void assignPatient(AssignAndRemoveRequest request, Long userId, String role) {
+        verifyDoctorPermission(role, request.getDoctorId(), userId);
+        Personal doctor = getPersonalOrThrow(request.getDoctorId());
+        Patient patient = getPatientOrThrow(request.getPatientId());
         if (!doctor.getPatients().contains(patient)) {
             doctor.getPatients().add(patient);
             personalRepository.save(doctor);
@@ -89,12 +85,10 @@ public class PersonalServiceImpl implements PersonalService {
 
     @Override
     @Transactional
-    public void removePatient(Long doctorId, Long patientId, Long userId, String role) {
-        Personal doctor = getOrThrow(doctorId);
-        if (role.equals(ERole.DOCTOR.name()))
-            if(!doctor.getAccount().getId().equals(userId))
-                throw new ForbiddenException("this user cannot remove this patient");
-        Patient patient = getPatientOrThrow(patientId);
+    public void removePatient(AssignAndRemoveRequest request, Long userId, String role) {
+        verifyDoctorPermission(role, request.getDoctorId(), userId);
+        Personal doctor = getPersonalOrThrow(request.getDoctorId());
+        Patient patient = getPatientOrThrow(request.getPatientId());
         if (doctor.getPatients().contains(patient)) {
             doctor.getPatients().remove(patient);
             personalRepository.save(doctor);
@@ -103,27 +97,40 @@ public class PersonalServiceImpl implements PersonalService {
 
     @Override
     public List<PatientResponse> getPatientsOfDoctor(Long doctorId) {
-        Personal doctor = getOrThrow(doctorId);
+        Personal doctor = getPersonalOrThrow(doctorId);
         return patientMapper.toResponseList(doctor.getPatients());
     }
 
-    private Personal getOrThrow(Long id) {
-        return personalRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Personal not found with id: " + id));
+    @Override
+    public PersonalResponse findBySelf(Long accountId) {
+        Personal personal = personalRepository.findByAccountId(accountId)
+                .orElseThrow(() -> new ResourceNotFoundException("No se encontro el personal con el id: " + accountId));
+        return personalMapper.toResponse(personal);
     }
 
-    private Specialty getSpecialtyOrThrow(Long id) {
-        return specialtyRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Specialty not found with id: " + id));
+    private Personal getPersonalOrThrow(Long personalId) {
+        return personalRepository.findById(personalId)
+                .orElseThrow(() -> new ResourceNotFoundException("No se encontro el personal con el id: " + personalId));
     }
 
-    private Role getRoleOrThrow(Long id) {
-        return roleRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Role not found: " + id));
+    private void getSpecialtyOrThrow(Long specialtyId) {
+        specialtyRepository.findById(specialtyId)
+                .orElseThrow(() -> new ResourceNotFoundException("No se encontro la especialidad con el specialtyId: " + specialtyId));
     }
 
-    private Patient getPatientOrThrow(Long id) {
-        return patientRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Patient not found with id: " + id));
+    private void getRoleOrThrow(Long roleId) {
+        roleRepository.findById(roleId)
+                .orElseThrow(() -> new ResourceNotFoundException("No se encontro el role con el roleId " + roleId));
+    }
+
+    private Patient getPatientOrThrow(Long patientId) {
+        return patientRepository.findById(patientId)
+                .orElseThrow(() -> new ResourceNotFoundException("No se encontro el paciente con el patientId: " + patientId));
+    }
+
+    public void verifyDoctorPermission(String role, Long doctorId, Long userId) {
+
+        if (role.equals(ERole.DOCTOR.name()) && !doctorId.equals(userId))
+            throw new ForbiddenException("Este usuario no tiene permitido usar este recurso");
     }
 }

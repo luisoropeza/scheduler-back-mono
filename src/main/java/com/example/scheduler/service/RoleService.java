@@ -5,5 +5,5 @@ import com.example.scheduler.dto.role.RoleResponse;
 import java.util.List;
 
 public interface RoleService {
-    List<RoleResponse> findAll();
+    List<RoleResponse> findAllRoles();
 }

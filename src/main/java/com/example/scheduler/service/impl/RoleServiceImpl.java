@@ -18,7 +18,7 @@ public class RoleServiceImpl implements RoleService {
     private final RoleMapper roleMapper;
 
     @Override
-    public List<RoleResponse> findAll() {
+    public List<RoleResponse> findAllRoles() {
         return roleMapper.toResponseList(roleRepository.findAll());
     }
 }

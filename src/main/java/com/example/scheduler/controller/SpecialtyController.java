@@ -23,14 +23,14 @@ public class SpecialtyController {
 
     @GetMapping
     @Operation(summary = "GET /api/specialties — list all available specialties")
-    public ResponseEntity<List<SpecialtyResponse>> findAll() {
-        return ResponseEntity.ok(specialtyService.findAll());
+    public ResponseEntity<List<SpecialtyResponse>> findAllSpecialties() {
+        return ResponseEntity.ok(specialtyService.findAllSpecialties());
     }
 
     @PostMapping
     @PreAuthorize("hasRole('ADMINISTRATOR')")
     @Operation(summary = "POST /api/specialties — create a specialty (administrator only)")
-    public ResponseEntity<SpecialtyResponse> create(@Valid @RequestBody SpecialtyRequest request) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(specialtyService.create(request));
+    public ResponseEntity<SpecialtyResponse> createSpecialty(@Valid @RequestBody SpecialtyRequest request) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(specialtyService.createSpecialty(request));
     }
 }

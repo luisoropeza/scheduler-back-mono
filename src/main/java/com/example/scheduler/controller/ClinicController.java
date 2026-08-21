@@ -25,23 +25,23 @@ public class ClinicController {
 
     @GetMapping
     @Operation(summary = "GET /api/clinics — list all clinics")
-    public ResponseEntity<List<ClinicResponse>> findAll() {
-        return ResponseEntity.ok(clinicService.findAll());
+    public ResponseEntity<List<ClinicResponse>> findAllClinics() {
+        return ResponseEntity.ok(clinicService.findAllClinics());
     }
 
     @GetMapping("/mine")
     @Operation(summary = "GET /api/clinics/mine — list the clinics the authenticated user belongs to")
-    public ResponseEntity<List<ClinicResponse>> findMine(Authentication auth) {
+    public ResponseEntity<List<ClinicResponse>> findMineClinics(Authentication auth) {
         Long accountId = Long.parseLong(auth.getName());
         List<ClinicResponse> clinics = SecurityUtils.extractRole(auth).equals(ERole.PATIENT.name())
-                ? clinicService.findByPatientAccountId(accountId)
-                : clinicService.findByPersonalAccountId(accountId);
+                ? clinicService.findClinicsByPatientAccountId(accountId)
+                : clinicService.findClinicsByPersonalAccountId(accountId);
         return ResponseEntity.ok(clinics);
     }
 
     @PostMapping
-    @Operation(summary = "POST /api/clinics — create a new clinic")
-    public ResponseEntity<ClinicResponse> create(@Valid @RequestBody ClinicRequest request) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(clinicService.create(request));
+    @Operation(summary = "POST /api/clinics — create clinic")
+    public ResponseEntity<ClinicResponse> createClinic(@Valid @RequestBody ClinicRequest request) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(clinicService.createClinic(request));
     }
 }

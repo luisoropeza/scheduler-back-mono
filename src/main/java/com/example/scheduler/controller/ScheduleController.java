@@ -1,8 +1,12 @@
 package com.example.scheduler.controller;
 
+import com.example.scheduler.dto.personal.PersonalResponse;
 import com.example.scheduler.dto.schedule.ScheduleRequest;
 import com.example.scheduler.dto.schedule.ScheduleResponse;
+import com.example.scheduler.enums.ERole;
 import com.example.scheduler.enums.ScheduleStatus;
+import com.example.scheduler.security.SecurityUtils;
+import com.example.scheduler.service.PersonalService;
 import com.example.scheduler.service.ScheduleService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -15,63 +19,75 @@ import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
 import java.util.List;
 
 @RestController
+@RequestMapping("/api/schedules")
 @RequiredArgsConstructor
 @Tag(name = "Schedules", description = "Manage and browse time slots")
 public class ScheduleController {
     private final ScheduleService scheduleService;
+    private final PersonalService personalService;
 
-    @GetMapping("/api/schedules")
+    @GetMapping
     @Operation(summary = "GET /api/schedules — browse slots, filter by ?doctorId={doctorId}?specialtyId={specialtyId}?status={status}?after={after}")
-    public ResponseEntity<Page<ScheduleResponse>> findAll(
+    public ResponseEntity<Page<ScheduleResponse>> findAllSchedules(
             @RequestParam(required = false) Long doctorId,
             @RequestParam(required = false) Long specialtyId,
             @RequestParam(required = false) ScheduleStatus status,
             @RequestParam(required = false) LocalDateTime after,
-            @PageableDefault(sort = "startTime", direction = Sort.Direction.ASC) Pageable pageable
+            @PageableDefault(sort = "startTime", direction = Sort.Direction.ASC) Pageable pageable,
+            Authentication auth
     ) {
-        return ResponseEntity.ok(scheduleService.findAll(doctorId, specialtyId, status, after, pageable));
+        if (SecurityUtils.extractRole(auth).equals(ERole.DOCTOR.name())) {
+            PersonalResponse personal = personalService.findBySelf(Long.parseLong(auth.getName()));
+            return ResponseEntity.ok(scheduleService.findAllSchedules(personal.getId(), specialtyId, status, after, pageable));
+        }
+        return ResponseEntity.ok(scheduleService.findAllSchedules(doctorId, specialtyId, status, after, pageable));
     }
 
-    @GetMapping("/api/schedules/{id}")
-    @Operation(summary = "GET /api/schedules/{id} — get a schedule slot by ID")
-    public ResponseEntity<ScheduleResponse> findById(@PathVariable Long id) {
-        return ResponseEntity.ok(scheduleService.findById(id));
+    @GetMapping("/{scheduleId}")
+    @Operation(summary = "GET /api/schedules/{scheduleId} — get a schedule slot by ID")
+    public ResponseEntity<ScheduleResponse> findScheduleById(@PathVariable Long scheduleId, Authentication auth) {
+        PersonalResponse personal = personalService.findBySelf(Long.parseLong(auth.getName()));
+        return ResponseEntity.ok(scheduleService.findScheduleById(scheduleId, personal.getId(), SecurityUtils.extractRole(auth)));
     }
 
-    @PostMapping("/api/personal/{doctorId}/schedules")
+    @PostMapping
     @PreAuthorize("hasRole('DOCTOR')")
-    @Operation(summary = "POST /api/personal/{doctorId}/schedules — add a single available time slot for a doctor")
-    public ResponseEntity<ScheduleResponse> create(
-            @PathVariable Long doctorId,
-            @Valid @RequestBody ScheduleRequest request
+    @Operation(summary = "POST /api/personal/schedules — add a single available time slot for a doctor")
+    public ResponseEntity<ScheduleResponse> createSchedule(
+            @Valid @RequestBody ScheduleRequest request,
+            Authentication auth
     ) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(scheduleService.create(doctorId, request));
+        PersonalResponse personal = personalService.findBySelf(Long.parseLong(auth.getName()));
+        return ResponseEntity.status(HttpStatus.CREATED).body(scheduleService.createSchedule(personal.getId(), request));
     }
 
-    @PostMapping("/api/personal/{doctorId}/schedules/batch")
+    @PostMapping("/batch")
     @PreAuthorize("hasRole('DOCTOR')")
-    @Operation(summary = "POST /api/personal/{doctorId}/schedules/batch — add multiple available time slots for a doctor")
-    public ResponseEntity<List<ScheduleResponse>> createBatch(
-            @PathVariable Long doctorId,
-            @Valid @RequestBody List<ScheduleRequest> requests
+    @Operation(summary = "POST /api/personal/schedules/batch — add multiple available time slots for a doctor")
+    public ResponseEntity<List<ScheduleResponse>> createSchedulesBatch(
+            @Valid @RequestBody List<ScheduleRequest> requests,
+            Authentication auth
     ) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(scheduleService.createBatch(doctorId, requests));
+        PersonalResponse personal = personalService.findBySelf(Long.parseLong(auth.getName()));
+        return ResponseEntity.status(HttpStatus.CREATED).body(scheduleService.createSchedulesBatch(personal.getId(), requests));
     }
 
-    @DeleteMapping("/api/personal/{doctorId}/schedules/{scheduleId}")
+    @DeleteMapping("/{scheduleId}")
     @PreAuthorize("hasRole('DOCTOR')")
-    @Operation(summary = "DELETE /api/personal/{doctorId}/schedules/{scheduleId} — remove an available slot")
-    public ResponseEntity<Void> delete(
-            @PathVariable Long doctorId,
-            @PathVariable Long scheduleId
+    @Operation(summary = "DELETE /api/personal/schedules/{scheduleId} — remove an available slot")
+    public ResponseEntity<Void> deleteSchedule(
+            @PathVariable Long scheduleId,
+            Authentication auth
     ) {
-        scheduleService.delete(scheduleId, doctorId);
+        PersonalResponse personal = personalService.findBySelf(Long.parseLong(auth.getName()));
+        scheduleService.deleteSchedule(personal.getId(), scheduleId);
         return ResponseEntity.noContent().build();
     }
 }

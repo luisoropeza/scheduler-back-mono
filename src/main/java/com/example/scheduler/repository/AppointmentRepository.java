@@ -17,7 +17,6 @@ public interface AppointmentRepository extends JpaRepository<Appointment, Long> 
             "(:patientId IS NULL OR a.patient.id = :patientId) AND " +
             "(:status IS NULL OR a.status = :status)")
     Page<Appointment> findAllByFilters(@Param("doctorId") Long doctorId, @Param("patientId") Long patientId, @Param("status") AppointmentStatus status, Pageable pageable);
-
     @Query("SELECT a FROM Appointment a WHERE " +
             "(:doctorId IS NULL OR a.schedule.doctor.id = :doctorId) AND " +
             "(:patientId IS NULL OR a.patient.id = :patientId) AND " +

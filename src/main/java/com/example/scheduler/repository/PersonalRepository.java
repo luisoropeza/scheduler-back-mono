@@ -1,5 +1,6 @@
 package com.example.scheduler.repository;
 
+import com.example.scheduler.entity.Account;
 import com.example.scheduler.entity.Personal;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -17,15 +18,13 @@ public interface PersonalRepository extends JpaRepository<Personal, Long> {
             "(:specialtyId IS NULL OR p.specialty.id = :specialtyId) AND " +
             "(:isActive IS NULL OR p.active = :isActive)")
     Page<Personal> findAllDoctorsByFilters(@Param("specialtyId") Long specialtyId, @Param("isActive") Boolean isActive, Pageable pageable);
-
     @Query("SELECT p FROM Personal p WHERE " +
-            "(:role IS NULL OR p.account.role.name = :role) AND " +
+            "(:role IS NULL OR p.account.role.id = :roleId) AND " +
             "(:specialtyId IS NULL OR p.specialty.id = :specialtyId) AND " +
             "(:isActive IS NULL OR p.active = :isActive)")
-    Page<Personal> findAllByFilters(@Param("specialtyId") Long specialtyId, @Param("isActive") Boolean isActive, @Param("role") String role, Pageable pageable);
-    Optional<Personal> findByAccount_Id(Long accountId);
-    boolean existsByAccount_Id(Long accountId);
-
+    Page<Personal> findAllByFilters(@Param("specialtyId") Long specialtyId, @Param("isActive") Boolean isActive, @Param("roleId") Long roleId, Pageable pageable);
     @Query(value = "SELECT DISTINCT clinic_id FROM personal WHERE personal_account_id = :accountId", nativeQuery = true)
     List<String> findClinicIdsByAccountId(@Param("accountId") Long accountId);
+    Optional<Personal> findByAccountId(Long accountId);
+    boolean existsByAccountId(Long accountId);
 }

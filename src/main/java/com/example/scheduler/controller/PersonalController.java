@@ -1,8 +1,10 @@
 package com.example.scheduler.controller;
 
 import com.example.scheduler.dto.patient.PatientResponse;
+import com.example.scheduler.dto.personal.AssignAndRemoveRequest;
 import com.example.scheduler.dto.personal.PersonalRequest;
 import com.example.scheduler.dto.personal.PersonalResponse;
+import com.example.scheduler.enums.ERole;
 import com.example.scheduler.security.SecurityUtils;
 import com.example.scheduler.service.PersonalService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -13,6 +15,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
@@ -28,6 +31,7 @@ public class PersonalController {
     private final PersonalService personalService;
 
     @GetMapping("/doctors")
+    @PreAuthorize("hasAnyRole('PATIENT', 'RECEPTIONIST')")
     @Operation(summary = "GET /api/personal/doctors — list staff members, filter by ?specialtyId={specialtyId}?isActive={isActive}")
     public ResponseEntity<Page<PersonalResponse>> findAllDoctors(
             @RequestParam(required = false) Long specialtyId,
@@ -38,60 +42,63 @@ public class PersonalController {
     }
 
     @GetMapping
-    @PreAuthorize("hasAnyRole('DOCTOR', 'RECEPTIONIST')")
+    @PreAuthorize("hasAnyRole('ADMINISTRATOR')")
     @Operation(summary = "GET /api/personal — list staff of any role, filter by ?specialtyId={specialtyId}&isActive={isActive}&role={role}")
-    public ResponseEntity<Page<PersonalResponse>> findAll(
+    public ResponseEntity<Page<PersonalResponse>> findAllPersonal(
             @RequestParam(required = false) Long specialtyId,
             @RequestParam(required = false) Boolean isActive,
-            @RequestParam(required = false) String role,
+            @RequestParam(required = false) Long roleId,
             @PageableDefault(sort = "id", direction = Sort.Direction.ASC) Pageable pageable
     ) {
-        return ResponseEntity.ok(personalService.findAll(specialtyId, isActive, role, pageable));
+        return ResponseEntity.ok(personalService.findAllPersonal(specialtyId, isActive, roleId, pageable));
     }
 
-    @GetMapping("/{id}")
-    @PreAuthorize("hasAnyRole('DOCTOR', 'RECEPTIONIST')")
-    @Operation(summary = "GET /api/personal/{id} — get a staff member by ID")
-    public ResponseEntity<PersonalResponse> findById(@PathVariable Long id) {
-        return ResponseEntity.ok(personalService.findById(id));
+    @GetMapping("/{personalId}")
+    @PreAuthorize("hasAnyRole('RECEPTIONIST, ADMINISTRATOR')")
+    @Operation(summary = "GET /api/personal/{personalId} — get a staff member by ID")
+    public ResponseEntity<PersonalResponse> findPersonalById(@PathVariable Long personalId) {
+        return ResponseEntity.ok(personalService.findPersonalById(personalId));
     }
 
-    @PutMapping("/{id}")
-    @PreAuthorize("hasAnyRole('DOCTOR', 'RECEPTIONIST')")
-    @Operation(summary = "PUT /api/personal/{id} — update name, email, role, or specialty of a staff member")
-    public ResponseEntity<PersonalResponse> update(@PathVariable Long id, @Valid @RequestBody PersonalRequest request) {
-        return ResponseEntity.ok(personalService.update(id, request));
+    @PutMapping("/{personalId}")
+    @PreAuthorize("hasAnyRole('ADMINISTRATOR')")
+    @Operation(summary = "PUT /api/personal/{personalId} — update a patient name, email, role, or specialty of a staff member")
+    public ResponseEntity<PersonalResponse> updatePersonalById(@PathVariable Long personalId, @Valid @RequestBody PersonalRequest request) {
+        return ResponseEntity.ok(personalService.updatePersonalById(personalId, request));
     }
 
-    @DeleteMapping("/{id}")
-    @PreAuthorize("hasAnyRole('DOCTOR', 'RECEPTIONIST')")
-    @Operation(summary = "DELETE /api/personal/{id} — deactivate (soft-delete) a staff member")
-    public ResponseEntity<Void> deactivate(@PathVariable Long id) {
-        personalService.deactivate(id);
+    @PutMapping
+    @PreAuthorize("hasAnyRole('DOCTOR, RECEPTIONIST')")
+    @Operation(summary = "PUT /api/personal — update by self name, email, role, or specialty of a staff member")
+    public ResponseEntity<PersonalResponse> updatePersonalBySelf(@Valid @RequestBody PersonalRequest request, Authentication auth) {
+        PersonalResponse personal = personalService.findBySelf(Long.parseLong(auth.getName()));
+        return ResponseEntity.ok(personalService.updatePersonalById(personal.getId(), request));
+    }
+
+    @DeleteMapping("/{personalId}")
+    @PreAuthorize("hasAnyRole('ADMINISTRATOR')")
+    @Operation(summary = "DELETE /api/personal/{personalId} — deactivate a patient (soft-deleteSchedule) a staff member")
+    public ResponseEntity<Void> deactivatePersonalById(@PathVariable Long personalId) {
+        personalService.deactivatePersonalById(personalId);
         return ResponseEntity.noContent().build();
     }
 
-    @PostMapping("/{doctorId}/patients/{patientId}")
-    @PreAuthorize("hasAnyRole('DOCTOR', 'RECEPTIONIST')")
+    @PostMapping("/patients/assign")
+    @PreAuthorize("hasAnyRole('RECEPTIONIST')")
     @Operation(summary = "POST /api/personal/{doctorId}/patients/{patientId} — assign a patient to a doctor")
-    public ResponseEntity<Void> assignPatient(
-            @PathVariable Long doctorId,
-            @PathVariable Long patientId,
-            Authentication auth
-    ) {
-        personalService.assignPatient(doctorId, patientId, Long.parseLong(auth.getName()), SecurityUtils.extractRole(auth));
+    public ResponseEntity<Void> assignPatient(@Valid AssignAndRemoveRequest request, Authentication auth) {
+        PersonalResponse personal = personalService.findBySelf(Long.parseLong(auth.getName()));
+        personalService.assignPatient(request, personal.getId(), SecurityUtils.extractRole(auth));
         return ResponseEntity.noContent().build();
     }
 
-    @DeleteMapping("/{doctorId}/patients/{patientId}")
-    @PreAuthorize("hasAnyRole('DOCTOR', 'RECEPTIONIST')")
+    @DeleteMapping("/patients/remove")
+    @PreAuthorize("hasAnyRole('RECEPTIONIST')")
     @Operation(summary = "DELETE /api/personal/{doctorId}/patients/{patientId} — remove a patient from a doctor")
-    public ResponseEntity<Void> removePatient(
-            @PathVariable Long doctorId,
-            @PathVariable Long patientId,
-            Authentication auth
-    ) {
-        personalService.removePatient(doctorId, patientId, Long.parseLong(auth.getName()), SecurityUtils.extractRole(auth));
+    public ResponseEntity<Void> removePatient(@Valid AssignAndRemoveRequest request, Authentication auth) {
+
+        PersonalResponse personal = personalService.findBySelf(Long.parseLong(auth.getName()));
+        personalService.removePatient(request, personal.getId(), SecurityUtils.extractRole(auth));
         return ResponseEntity.noContent().build();
     }
 

@@ -10,10 +10,8 @@ import lombok.Data;
 public class ClinicRequest {
     @NotNull
     String name;
-
     @NotNull
     String phoneNumber;
-
     @NotBlank
     private String adminName;
     @NotBlank

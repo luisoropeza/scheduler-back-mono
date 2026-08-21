@@ -20,15 +20,15 @@ public class SpecialtyServiceImpl implements SpecialtyService {
     private final SpecialtyMapper specialtyMapper;
 
     @Override
-    public List<SpecialtyResponse> findAll() {
+    public List<SpecialtyResponse> findAllSpecialties() {
         return specialtyMapper.toResponseList(specialtyRepository.findAll());
     }
 
     @Override
     @Transactional
-    public SpecialtyResponse create(SpecialtyRequest request) {
+    public SpecialtyResponse createSpecialty(SpecialtyRequest request) {
         if (specialtyRepository.existsByName(request.getName())) {
-            throw new BusinessException("Specialty already exists in this clinic");
+            throw new BusinessException("Esta especialidad ya existe en esta clinica");
         }
         return specialtyMapper.toResponse(specialtyRepository.save(specialtyMapper.toEntity(request)));
     }

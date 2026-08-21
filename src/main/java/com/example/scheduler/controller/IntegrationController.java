@@ -1,13 +1,13 @@
 package com.example.scheduler.controller;
 
-import com.example.scheduler.dto.appointment.AppointmentRequest;
+import com.example.scheduler.dto.appointment.AppointmentPatientRequest;
+import com.example.scheduler.dto.appointment.AppointmentPersonalRequest;
 import com.example.scheduler.dto.appointment.AppointmentResponse;
 import com.example.scheduler.dto.clinic.ClinicResponse;
 import com.example.scheduler.dto.patient.PatientResponse;
 import com.example.scheduler.dto.personal.PersonalResponse;
 import com.example.scheduler.dto.schedule.ScheduleResponse;
 import com.example.scheduler.dto.specialty.SpecialtyResponse;
-import com.example.scheduler.enums.ERole;
 import com.example.scheduler.enums.ScheduleStatus;
 import com.example.scheduler.middleware.ApiKeyAuthFilter;
 import com.example.scheduler.service.AppointmentService;
@@ -52,19 +52,19 @@ public class IntegrationController {
 
     @GetMapping("/clinics")
     @Operation(summary = "GET /api/integrations/n8n/clinics — list the clinics a patient (by ?phoneNumber={phoneNumber}) belongs to")
-    public ResponseEntity<List<ClinicResponse>> findClinics(@RequestParam String phoneNumber) {
-        return ResponseEntity.ok(clinicService.findByPatientPhoneNumber(phoneNumber));
+    public ResponseEntity<List<ClinicResponse>> findClinicsByPatientPhoneNumber(@RequestParam String phoneNumber) {
+        return ResponseEntity.ok(clinicService.findClinicsByPatientPhoneNumber(phoneNumber));
     }
 
     @GetMapping("/specialties")
     @Operation(summary = "GET /api/integrations/n8n/specialties — list all available specialties")
-    public ResponseEntity<List<SpecialtyResponse>> findSpecialties() {
-        return ResponseEntity.ok(specialtyService.findAll());
+    public ResponseEntity<List<SpecialtyResponse>> findAllSpecialties() {
+        return ResponseEntity.ok(specialtyService.findAllSpecialties());
     }
 
     @GetMapping("/doctors")
     @Operation(summary = "GET /api/integrations/n8n/doctors — list active doctors, filter by ?specialtyId={specialtyId}")
-    public ResponseEntity<Page<PersonalResponse>> findDoctors(
+    public ResponseEntity<Page<PersonalResponse>> findAllDoctors(
             @RequestParam Long specialtyId,
             @PageableDefault(sort = "id", direction = Sort.Direction.ASC) Pageable pageable
     ) {
@@ -73,24 +73,23 @@ public class IntegrationController {
 
     @GetMapping("/schedules")
     @Operation(summary = "GET /api/integrations/n8n/schedules — list available slots for ?doctorId={doctorId}")
-    public ResponseEntity<Page<ScheduleResponse>> findAvailableSchedules(
+    public ResponseEntity<Page<ScheduleResponse>> findAllSchedules(
             @RequestParam Long doctorId,
             @PageableDefault(sort = "startTime", direction = Sort.Direction.ASC) Pageable pageable
     ) {
-        return ResponseEntity.ok(scheduleService.findAll(doctorId, null, ScheduleStatus.AVAILABLE, LocalDateTime.now(), pageable));
+        return ResponseEntity.ok(scheduleService.findAllSchedules(doctorId, null, ScheduleStatus.AVAILABLE, LocalDateTime.now(), pageable));
     }
 
     @GetMapping("/patients/lookup")
     @Operation(summary = "GET /api/integrations/n8n/patients/lookup — find a registered patient by for ?phoneNumber={phoneNumber}")
-    public ResponseEntity<PatientResponse> lookupPatient(@RequestParam String phoneNumber) {
-        return ResponseEntity.ok(patientService.findByPhoneNumber(phoneNumber));
+    public ResponseEntity<PatientResponse> findPatientByPhoneNumber(@RequestParam String phoneNumber) {
+        return ResponseEntity.ok(patientService.findPatientByPhoneNumber(phoneNumber));
     }
 
-    @PostMapping("/appointments")
-    @Operation(summary = "POST /api/integrations/n8n/appointments — book a schedule slot for the patient identified by phoneNumber")
-    public ResponseEntity<AppointmentResponse> book(@Valid @RequestBody AppointmentRequest request) {
-        Long accountId = patientService.findById(request.getClientId()).getAccountId();
+    @PostMapping("/appointments/book")
+    @Operation(summary = "POST /api/integrations/n8n/appointments — bookAppointment a schedule slot for the patient identified by phoneNumber")
+    public ResponseEntity<AppointmentResponse> book(@RequestParam Long id, @Valid @RequestBody AppointmentPatientRequest request) {
         return ResponseEntity.status(HttpStatus.CREATED)
-                .body(appointmentService.book(request, accountId, ERole.PATIENT.name()));
+                .body(appointmentService.bookAppointment(id, request));
     }
 }

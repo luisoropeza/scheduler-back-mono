@@ -1,11 +1,11 @@
 package com.example.scheduler.service.impl;
 
-import com.example.scheduler.dto.appointment.AppointmentRequest;
+import com.example.scheduler.dto.appointment.AppointmentPersonalRequest;
 import com.example.scheduler.dto.appointment.AppointmentResponse;
 import com.example.scheduler.dto.appointment.AppointmentSummaryItem;
+import com.example.scheduler.dto.schedule.RescheduleRequest;
 import com.example.scheduler.entity.Appointment;
 import com.example.scheduler.entity.Patient;
-import com.example.scheduler.entity.Personal;
 import com.example.scheduler.entity.Schedule;
 import com.example.scheduler.enums.AppointmentStatus;
 import com.example.scheduler.enums.ERole;
@@ -44,50 +44,43 @@ public class AppointmentServiceImpl implements AppointmentService {
     private final AppointmentRepository appointmentRepository;
     private final ScheduleRepository scheduleRepository;
     private final PatientRepository patientRepository;
-    private final PersonalRepository personalRepository;
     private final AppointmentMapper appointmentMapper;
 
     @Override
     @Transactional
-    public AppointmentResponse book(AppointmentRequest request, Long userId, String role) {
+    public AppointmentResponse bookAppointment(AppointmentPersonalRequest request, Long userId, String role) {
+        boolean isPatient = role.equals(ERole.PATIENT.name());
+        if(isPatient && userId.equals(request.getPatientId()))
+            throw new ForbiddenException("Este usuario no puede crear una cita en este recurso");
         Schedule schedule = getScheduleOrThrow(request.getScheduleId());
-        if (!ScheduleStatus.AVAILABLE.equals(schedule.getStatus()))
-            throw new BusinessException("This schedule slot is no longer available");
-        if (schedule.getStartTime().isBefore(LocalDateTime.now()))
-            throw new BusinessException("Cannot book a past schedule slot");
-        Patient patient = getPatientOrThrow(request.getClientId());
-        if (role.equals(ERole.PATIENT.name()) && !patient.getAccount().getId().equals(userId))
-            throw new ForbiddenException("A patient can only book appointments for themselves");
+        Patient patient = getPatientOrThrow(request.getPatientId());
+        validateAvailabilityAndDate(schedule);
         schedule.setStatus(ScheduleStatus.BOOKED);
         Appointment appointment = Appointment.builder()
                 .schedule(schedule)
                 .patient(patient)
+                .status(isPatient? AppointmentStatus.PENDING : AppointmentStatus.CONFIRMED)
                 .build();
-        if (!role.equals(ERole.PATIENT.name())) {
-            appointment.setStatus(AppointmentStatus.CONFIRMED);
-        }
         return appointmentMapper.toResponse(appointmentRepository.save(appointment));
     }
 
     @Override
-    public AppointmentResponse findById(Long id) {
-        return appointmentMapper.toResponse(getOrThrow(id));
+    public AppointmentResponse findAppointmentById(Long id) {
+        return appointmentMapper.toResponse(getAppointmentOrThrow(id));
     }
 
     @Override
-    public Page<AppointmentResponse> findAppointments(Long doctorId, Long clientId, AppointmentStatus status, Pageable pageable, Long userId, String role) {
-        Long resolvedDoctorId = resolveDoctorFilter(doctorId, userId, role);
-        Long resolvedClientId = resolveClientFilter(clientId, userId, role);
-        return appointmentRepository.findAllByFilters(resolvedDoctorId, resolvedClientId, status, pageable).map(appointmentMapper::toResponse);
+    public Page<AppointmentResponse> findAllAppointments(Long doctorId, Long patientId, AppointmentStatus status, Pageable pageable) {
+        return appointmentRepository.findAllByFilters(doctorId, patientId, status, pageable).map(appointmentMapper::toResponse);
     }
 
     @Override
     @Transactional
-    public AppointmentResponse confirm(Long id, Long userId, String role) {
-        Appointment appointment = getOrThrow(id);
+    public AppointmentResponse confirmAppointmentById(Long id, Long patientId, String role) {
+        Appointment appointment = getAppointmentOrThrow(id);
         if(role.equals(ERole.DOCTOR.name()))
-            if (!appointment.getSchedule().getDoctor().getAccount().getId().equals(userId))
-                throw new ForbiddenException("Not authorized to confirm this appointment");
+            if (!appointment.getSchedule().getDoctor().getAccount().getId().equals(patientId))
+                throw new ForbiddenException("Not authorized to confirmAppointmentById this appointment");
         if (appointment.getStatus() != AppointmentStatus.PENDING)
             throw new BusinessException("Only pending appointments can be confirmed");
         appointment.setStatus(AppointmentStatus.CONFIRMED);
@@ -96,8 +89,8 @@ public class AppointmentServiceImpl implements AppointmentService {
 
     @Override
     @Transactional
-    public AppointmentResponse cancel(Long id) {
-        Appointment appointment = getOrThrow(id);
+    public AppointmentResponse cancelAppointmentById(Long id) {
+        Appointment appointment = getAppointmentOrThrow(id);
         if (appointment.getStatus() == AppointmentStatus.CANCELLED)
             throw new BusinessException("Appointment is already cancelled");
         appointment.setStatus(AppointmentStatus.CANCELLED);
@@ -107,15 +100,15 @@ public class AppointmentServiceImpl implements AppointmentService {
 
     @Override
     @Transactional
-    public AppointmentResponse reschedule(Long id, Long newScheduleId) {
-        Appointment appointment = getOrThrow(id);
+    public AppointmentResponse rescheduleAppointmentById(Long id, RescheduleRequest request) {
+        Appointment appointment = getAppointmentOrThrow(id);
+        Schedule newSchedule = getScheduleOrThrow(request.getScheduleId());
         if (appointment.getStatus() == AppointmentStatus.CANCELLED)
-            throw new BusinessException("Cannot reschedule a cancelled appointment");
-        Schedule newSchedule = getScheduleOrThrow(newScheduleId);
+            throw new BusinessException("Cannot rescheduleAppointmentById a cancelled appointment");
         if (newSchedule.getStatus() != ScheduleStatus.AVAILABLE)
             throw new BusinessException("New schedule slot is not available");
         if (newSchedule.getStartTime().isBefore(LocalDateTime.now()))
-            throw new BusinessException("Cannot reschedule to a past slot");
+            throw new BusinessException("Cannot rescheduleAppointmentById to a past slot");
         newSchedule.setStatus(ScheduleStatus.BOOKED);
         appointment.getSchedule().setStatus(ScheduleStatus.AVAILABLE);
         appointment.setSchedule(newSchedule);
@@ -124,36 +117,14 @@ public class AppointmentServiceImpl implements AppointmentService {
     }
 
     @Override
-    public Map<AppointmentStatus, List<AppointmentSummaryItem>> getBoardByRange(LocalDate from, LocalDate to, Long doctorId, Long clientId, Long userId, String role) {
-        Long resolvedDoctorId = resolveDoctorFilter(doctorId, userId, role);
-        Long resolvedClientId = resolveClientFilter(clientId, userId, role);
-        return groupByStatus(appointmentRepository.findByFiltersAndDateRange(resolvedDoctorId, resolvedClientId, from.atStartOfDay(), to.plusDays(1).atStartOfDay()));
+    public Map<AppointmentStatus, List<AppointmentSummaryItem>> getBoardByRange(LocalDate from, LocalDate to, Long doctorId, Long patientId, Long userId, String role) {
+        return groupByStatus(appointmentRepository.findByFiltersAndDateRange(doctorId, patientId, from.atStartOfDay(), to.plusDays(1).atStartOfDay()));
     }
 
     @Override
-    public Map<String, List<AppointmentSummaryItem>> getCalendar(int month, int year, Long doctorId, Long clientId, Long userId, String role) {
-        Long resolvedDoctorId = resolveDoctorFilter(doctorId, userId, role);
-        Long resolvedClientId = resolveClientFilter(clientId, userId, role);
+    public Map<String, List<AppointmentSummaryItem>> getCalendar(int month, int year, Long doctorId, Long patientId, Long userId, String role) {
         LocalDate monthStart = LocalDate.of(year, month, 1);
-        return groupByDay(appointmentRepository.findByFiltersAndDateRange(resolvedDoctorId, resolvedClientId, monthStart.atStartOfDay(), monthStart.plusMonths(1).atStartOfDay()));
-    }
-
-    private Long resolveDoctorFilter(Long doctorId, Long userId, String role) {
-        if (!role.equals(ERole.DOCTOR.name()))
-            return doctorId;
-        Long callerDoctorId = resolveCallerDoctorId(userId);
-        if (doctorId != null && !doctorId.equals(callerDoctorId))
-            throw new ForbiddenException("Not authorized to get those appointments");
-        return callerDoctorId;
-    }
-
-    private Long resolveClientFilter(Long clientId, Long userId, String role) {
-        if (!role.equals(ERole.PATIENT.name()))
-            return clientId;
-        Long callerClientId = resolveCallerPatientId(userId);
-        if (clientId != null && !clientId.equals(callerClientId))
-            throw new ForbiddenException("Not authorized to get those appointments");
-        return callerClientId;
+        return groupByDay(appointmentRepository.findByFiltersAndDateRange(doctorId, patientId, monthStart.atStartOfDay(), monthStart.plusMonths(1).atStartOfDay()));
     }
 
     private Map<AppointmentStatus, List<AppointmentSummaryItem>> groupByStatus(List<Appointment> appointments) {
@@ -184,7 +155,7 @@ public class AppointmentServiceImpl implements AppointmentService {
                 .build();
     }
 
-    private Appointment getOrThrow(Long id) {
+    private Appointment getAppointmentOrThrow(Long id) {
         return appointmentRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Appointment not found with id: " + id));
     }
@@ -199,15 +170,10 @@ public class AppointmentServiceImpl implements AppointmentService {
                 .orElseThrow(() -> new ResourceNotFoundException("Patient not found with id: " + id));
     }
 
-    private Long resolveCallerPatientId(Long accountId) {
-        return patientRepository.findByAccount_Id(accountId)
-                .map(Patient::getId)
-                .orElse(null);
-    }
-
-    private Long resolveCallerDoctorId(Long accountId) {
-        return personalRepository.findByAccount_Id(accountId)
-                .map(Personal::getId)
-                .orElse(null);
+    private void validateAvailabilityAndDate(Schedule schedule) {
+        if (!ScheduleStatus.AVAILABLE.equals(schedule.getStatus()))
+            throw new BusinessException("This schedule slot is no longer available");
+        if (schedule.getStartTime().isBefore(LocalDateTime.now()))
+            throw new BusinessException("Cannot bookAppointment a past schedule slot");
     }
 }

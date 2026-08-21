@@ -6,6 +6,6 @@ import com.example.scheduler.dto.specialty.SpecialtyResponse;
 import java.util.List;
 
 public interface SpecialtyService {
-    List<SpecialtyResponse> findAll();
-    SpecialtyResponse create(SpecialtyRequest request);
+    List<SpecialtyResponse> findAllSpecialties();
+    SpecialtyResponse createSpecialty(SpecialtyRequest request);
 }

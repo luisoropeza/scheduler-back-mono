@@ -75,8 +75,8 @@ public class TenantFilter extends OncePerRequestFilter {
 
         Long userId = Long.parseLong(auth.getName());
         return role.equals(ERole.PATIENT.name())
-                ? patientRepository.existsByAccount_Id(userId)
-                : personalRepository.existsByAccount_Id(userId);
+                ? patientRepository.existsByAccountId(userId)
+                : personalRepository.existsByAccountId(userId);
     }
 
     private boolean isExempt(String requestUri) {
