@@ -1,16 +1,13 @@
 package com.example.scheduler.controller;
 
-import com.example.scheduler.dto.appointment.AppointmentPersonalRequest;
+import com.example.scheduler.dto.appointment.AppointmentRequest;
 import com.example.scheduler.dto.appointment.AppointmentResponse;
 import com.example.scheduler.dto.appointment.AppointmentSummaryItem;
-import com.example.scheduler.dto.patient.PatientResponse;
-import com.example.scheduler.dto.personal.PersonalResponse;
 import com.example.scheduler.dto.schedule.RescheduleRequest;
 import com.example.scheduler.entity.Patient;
 import com.example.scheduler.entity.Personal;
 import com.example.scheduler.enums.AppointmentStatus;
-import com.example.scheduler.repository.PatientRepository;
-import com.example.scheduler.repository.PersonalRepository;
+import com.example.scheduler.enums.ERole;
 import com.example.scheduler.security.SecurityUtils;
 import com.example.scheduler.service.AppointmentService;
 import com.example.scheduler.service.PatientService;
@@ -45,52 +42,45 @@ public class AppointmentController {
 
     @PostMapping
     @Operation(summary = "POST /api/appointments — book an appointment for a patient on a given schedule slot")
-    public ResponseEntity<AppointmentResponse> bookAppointment(@Valid @RequestBody AppointmentPersonalRequest request, Authentication auth) {
-        PatientResponse patient = patientService.findBySelf(Long.parseLong(auth.getName()));
+    public ResponseEntity<AppointmentResponse> bookAppointment(@Valid @RequestBody AppointmentRequest request, Authentication auth) {
+        Patient patient = patientService.findBySelf(Long.parseLong(auth.getName()));
         return ResponseEntity.status(HttpStatus.CREATED).body(appointmentService.bookAppointment(request, patient.getId(), SecurityUtils.extractRole(auth)));
     }
+
     @GetMapping("/{id}")
     @Operation(summary = "GET /api/appointments/{id} — get appointment details by ID")
-    public ResponseEntity<AppointmentResponse> findAppointmentById(@PathVariable Long id) {
+    public ResponseEntity<AppointmentResponse> findAppointmentById(@PathVariable Long id, Authentication auth) {
+        String role = SecurityUtils.extractRole(auth);
+        if (role.equals(ERole.DOCTOR.name())){
+            Personal personal = personalService.findBySelf(Long.parseLong(auth.getName()));
+            return ResponseEntity.ok(appointmentService.findAppointmentByIdAndDoctorId(id, personal.getId()));
+        }
+        if (role.equals(ERole.PATIENT.name())){
+            Patient patient = patientService.findBySelf(Long.parseLong(auth.getName()));
+            return ResponseEntity.ok(appointmentService.findAppointmentByIdAndPatientId(id, patient.getId()));
+        }
         return ResponseEntity.ok(appointmentService.findAppointmentById(id));
     }
 
     @GetMapping
-    @PreAuthorize("hasAnyRole('RECEPCIONIST')")
     @Operation(summary = "GET /api/appointments — list appointments, filtered by ?doctorId={id}&patientId={id}&status={status} (all optional; DOCTOR/PATIENT callers are scoped to themselves, RECEPTIONIST can filter freely or omit both for a clinic-wide list)")
     public ResponseEntity<Page<AppointmentResponse>> findAllAppointments(
             @RequestParam(required = false) Long doctorId,
             @RequestParam(required = false) Long patientId,
             @RequestParam(required = false) AppointmentStatus status,
-            @PageableDefault(sort = "schedule.startTime", direction = Sort.Direction.ASC) Pageable pageable
+            @PageableDefault(sort = "schedule.startTime", direction = Sort.Direction.ASC) Pageable pageable,
+            Authentication auth
     ) {
+        String role = SecurityUtils.extractRole(auth);
+        if (role.equals(ERole.DOCTOR.name())){
+            Personal personal = personalService.findBySelf(Long.parseLong(auth.getName()));
+            return ResponseEntity.ok(appointmentService.findAllAppointments(personal.getId(), patientId, status, pageable));
+        }
+        if (role.equals(ERole.PATIENT.name())){
+            Patient patient = patientService.findBySelf(Long.parseLong(auth.getName()));
+            return ResponseEntity.ok(appointmentService.findAllAppointments(doctorId, patient.getId(), status, pageable));
+        }
         return ResponseEntity.ok(appointmentService.findAllAppointments(doctorId, patientId, status, pageable));
-    }
-
-    @GetMapping
-    @PreAuthorize("hasAnyRole('DOCTOR')")
-    @Operation(summary = "GET /api/appointments — list appointments, filtered by ?doctorId={id}&patientId={id}&status={status} (all optional; DOCTOR/PATIENT callers are scoped to themselves, RECEPTIONIST can filter freely or omit both for a clinic-wide list)")
-    public ResponseEntity<Page<AppointmentResponse>> findAllAppointmentsByDoctor(
-            @RequestParam(required = false) Long patientId,
-            @RequestParam(required = false) AppointmentStatus status,
-            @PageableDefault(sort = "schedule.startTime", direction = Sort.Direction.ASC) Pageable pageable,
-            Authentication auth
-    ) {
-        PersonalResponse personal = personalService.findBySelf(Long.parseLong(auth.getName()));
-        return ResponseEntity.ok(appointmentService.findAllAppointments(personal.getId(), patientId, status, pageable));
-    }
-
-    @GetMapping
-    @PreAuthorize("hasAnyRole('PATIENT')")
-    @Operation(summary = "GET /api/appointments — list appointments, filtered by ?doctorId={id}&patientId={id}&status={status} (all optional; DOCTOR/PATIENT callers are scoped to themselves, RECEPTIONIST can filter freely or omit both for a clinic-wide list)")
-    public ResponseEntity<Page<AppointmentResponse>> findAllAppointmentsByPatient(
-            @RequestParam(required = false) Long doctorId,
-            @RequestParam(required = false) AppointmentStatus status,
-            @PageableDefault(sort = "schedule.startTime", direction = Sort.Direction.ASC) Pageable pageable,
-            Authentication auth
-    ) {
-        PatientResponse patient = patientService.findBySelf(Long.parseLong(auth.getName()));
-        return ResponseEntity.ok(appointmentService.findAllAppointments(doctorId, patient.getId(), status, pageable));
     }
 
     @PatchMapping("/{id}/confirm")

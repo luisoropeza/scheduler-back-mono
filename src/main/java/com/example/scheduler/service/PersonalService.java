@@ -4,6 +4,7 @@ import com.example.scheduler.dto.patient.PatientResponse;
 import com.example.scheduler.dto.personal.AssignAndRemoveRequest;
 import com.example.scheduler.dto.personal.PersonalRequest;
 import com.example.scheduler.dto.personal.PersonalResponse;
+import com.example.scheduler.entity.Personal;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
@@ -18,5 +19,5 @@ public interface PersonalService {
     void assignPatient(AssignAndRemoveRequest request, Long userId, String role);
     void removePatient(AssignAndRemoveRequest request, Long userId, String role);
     List<PatientResponse> getPatientsOfDoctor(Long doctorId);
-    PersonalResponse findBySelf(Long accountId);
+    Personal findBySelf(Long accountId);
 }

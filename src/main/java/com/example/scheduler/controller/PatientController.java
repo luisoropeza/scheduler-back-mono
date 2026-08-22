@@ -35,32 +35,32 @@ public class PatientController {
         return ResponseEntity.ok(patientService.findAllPatients(pageable));
     }
 
-    @GetMapping("/{id}")
+    @GetMapping("/{patientId}")
     @PreAuthorize("hasAnyRole('DOCTOR', 'RECEPTIONIST')")
-    @Operation(summary = "GET /api/patients/{id} — get a patient by ID")
-    public ResponseEntity<PatientResponse> findPatientById(@PathVariable Long id) {
-        return ResponseEntity.ok(patientService.findPatientById(id));
+    @Operation(summary = "GET /api/patients/{patientId} — get a patient by ID")
+    public ResponseEntity<PatientResponse> findPatientById(@PathVariable Long patientId) {
+        return ResponseEntity.ok(patientService.findPatientById(patientId));
     }
 
-    @PutMapping("/profile")
+    @PutMapping("/update/{patientId}")
+    @PreAuthorize("hasAnyRole('DOCTOR', 'RECEPTIONIST')")
+    @Operation(summary = "PUT /api/patients/{patientId} — update a patient information")
+    public ResponseEntity<PatientResponse> updatePatientById(@PathVariable Long patientId, @Valid @RequestBody PatientRequest request) {
+        return ResponseEntity.ok(patientService.updatePatientById(patientId, request));
+    }
+
+    @PutMapping("/update")
     @PreAuthorize("hasAnyRole('PATIENT')")
-    @Operation(summary = "PUT /api/patients/{id} — updatePatientById patient information")
+    @Operation(summary = "PUT /api/patients/{id} — update self patient information")
     public ResponseEntity<PatientResponse> updatePatientProfile(@Valid @RequestBody PatientRequest request, Authentication auth) {
         return ResponseEntity.ok(patientService.updatePatientById(Long.parseLong(auth.getName()), request));
     }
 
-    @PutMapping("/{id}")
+    @DeleteMapping("/{patientId}")
     @PreAuthorize("hasAnyRole('DOCTOR', 'RECEPTIONIST')")
-    @Operation(summary = "PUT /api/patients/{id} — updatePatientById patient information")
-    public ResponseEntity<PatientResponse> updatePatientById(@PathVariable Long id, @Valid @RequestBody PatientRequest request) {
-        return ResponseEntity.ok(patientService.updatePatientById(id, request));
-    }
-
-    @DeleteMapping("/{id}")
-    @PreAuthorize("hasAnyRole('DOCTOR', 'RECEPTIONIST')")
-    @Operation(summary = "DELETE /api/patients/{id} — deactivatePatientById (soft-deleteSchedule) a patient account")
-    public ResponseEntity<Void> deactivatePatientById(@PathVariable Long id) {
-        patientService.deactivatePatientById(id);
+    @Operation(summary = "DELETE /api/patients/{patientId} — deactivate a patient (soft-deleteSchedule) a patient account")
+    public ResponseEntity<Void> deactivatePatientById(@PathVariable Long patientId) {
+        patientService.deactivatePatientById(patientId);
         return ResponseEntity.noContent().build();
     }
 

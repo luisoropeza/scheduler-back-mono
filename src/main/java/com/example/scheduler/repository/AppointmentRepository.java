@@ -10,6 +10,7 @@ import org.springframework.data.repository.query.Param;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 public interface AppointmentRepository extends JpaRepository<Appointment, Long> {
     @Query("SELECT a FROM Appointment a WHERE " +
@@ -23,4 +24,6 @@ public interface AppointmentRepository extends JpaRepository<Appointment, Long> 
             "a.schedule.startTime >= :from AND a.schedule.startTime < :to " +
             "ORDER BY a.schedule.startTime ASC")
     List<Appointment> findByFiltersAndDateRange(@Param("doctorId") Long doctorId, @Param("patientId") Long patientId, @Param("from") LocalDateTime from, @Param("to") LocalDateTime to);
+    Optional<Appointment> findByIdAndScheduleDoctorId(Long id, Long scheduleDoctorId);
+    Optional<Appointment> findByIdAndPatientId(Long id, Long patientId);
 }

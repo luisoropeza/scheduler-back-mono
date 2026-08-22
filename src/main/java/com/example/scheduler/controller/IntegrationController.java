@@ -1,13 +1,13 @@
 package com.example.scheduler.controller;
 
-import com.example.scheduler.dto.appointment.AppointmentPatientRequest;
-import com.example.scheduler.dto.appointment.AppointmentPersonalRequest;
+import com.example.scheduler.dto.appointment.AppointmentRequest;
 import com.example.scheduler.dto.appointment.AppointmentResponse;
 import com.example.scheduler.dto.clinic.ClinicResponse;
 import com.example.scheduler.dto.patient.PatientResponse;
 import com.example.scheduler.dto.personal.PersonalResponse;
 import com.example.scheduler.dto.schedule.ScheduleResponse;
 import com.example.scheduler.dto.specialty.SpecialtyResponse;
+import com.example.scheduler.enums.ERole;
 import com.example.scheduler.enums.ScheduleStatus;
 import com.example.scheduler.middleware.ApiKeyAuthFilter;
 import com.example.scheduler.service.AppointmentService;
@@ -88,8 +88,8 @@ public class IntegrationController {
 
     @PostMapping("/appointments/book")
     @Operation(summary = "POST /api/integrations/n8n/appointments — bookAppointment a schedule slot for the patient identified by phoneNumber")
-    public ResponseEntity<AppointmentResponse> book(@RequestParam Long id, @Valid @RequestBody AppointmentPatientRequest request) {
+    public ResponseEntity<AppointmentResponse> book(@RequestParam Long id, @Valid @RequestBody AppointmentRequest request) {
         return ResponseEntity.status(HttpStatus.CREATED)
-                .body(appointmentService.bookAppointment(id, request));
+                .body(appointmentService.bookAppointment(request, id, ERole.PATIENT.name()));
     }
 }

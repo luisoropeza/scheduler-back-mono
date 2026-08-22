@@ -1,6 +1,6 @@
 package com.example.scheduler.service.impl;
 
-import com.example.scheduler.dto.appointment.AppointmentPersonalRequest;
+import com.example.scheduler.dto.appointment.AppointmentRequest;
 import com.example.scheduler.dto.appointment.AppointmentResponse;
 import com.example.scheduler.dto.appointment.AppointmentSummaryItem;
 import com.example.scheduler.dto.schedule.RescheduleRequest;
@@ -16,7 +16,6 @@ import com.example.scheduler.exception.ResourceNotFoundException;
 import com.example.scheduler.mapper.AppointmentMapper;
 import com.example.scheduler.repository.AppointmentRepository;
 import com.example.scheduler.repository.PatientRepository;
-import com.example.scheduler.repository.PersonalRepository;
 import com.example.scheduler.repository.ScheduleRepository;
 import com.example.scheduler.service.AppointmentService;
 import lombok.RequiredArgsConstructor;
@@ -48,7 +47,7 @@ public class AppointmentServiceImpl implements AppointmentService {
 
     @Override
     @Transactional
-    public AppointmentResponse bookAppointment(AppointmentPersonalRequest request, Long userId, String role) {
+    public AppointmentResponse bookAppointment(AppointmentRequest request, Long userId, String role) {
         boolean isPatient = role.equals(ERole.PATIENT.name());
         if(isPatient && userId.equals(request.getPatientId()))
             throw new ForbiddenException("Este usuario no puede crear una cita en este recurso");
@@ -67,6 +66,16 @@ public class AppointmentServiceImpl implements AppointmentService {
     @Override
     public AppointmentResponse findAppointmentById(Long id) {
         return appointmentMapper.toResponse(getAppointmentOrThrow(id));
+    }
+
+    @Override
+    public AppointmentResponse findAppointmentByIdAndDoctorId(Long doctorId, Long id) {
+        return appointmentMapper.toResponse(getAppointmentOrThrowByDoctor(id, doctorId));
+    }
+
+    @Override
+    public AppointmentResponse findAppointmentByIdAndPatientId(Long patientId, Long id) {
+        return appointmentMapper.toResponse(getAppointmentOrThrowByPatient(id, patientId));
     }
 
     @Override
@@ -157,6 +166,16 @@ public class AppointmentServiceImpl implements AppointmentService {
 
     private Appointment getAppointmentOrThrow(Long id) {
         return appointmentRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Appointment not found with id: " + id));
+    }
+
+    private Appointment getAppointmentOrThrowByDoctor(Long id, Long doctorId) {
+        return appointmentRepository.findByIdAndScheduleDoctorId(id, doctorId)
+                .orElseThrow(() -> new ResourceNotFoundException("Appointment not found with id: " + id));
+    }
+
+    private Appointment getAppointmentOrThrowByPatient(Long id, Long patientId) {
+        return appointmentRepository.findByIdAndPatientId(id, patientId)
                 .orElseThrow(() -> new ResourceNotFoundException("Appointment not found with id: " + id));
     }
 

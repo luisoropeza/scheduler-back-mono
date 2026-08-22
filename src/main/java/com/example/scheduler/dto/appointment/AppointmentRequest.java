@@ -4,7 +4,9 @@ import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 
 @Data
-public class AppointmentPatientRequest {
+public class AppointmentRequest {
     @NotNull
     private Long scheduleId;
+    @NotNull
+    private Long patientId;
 }

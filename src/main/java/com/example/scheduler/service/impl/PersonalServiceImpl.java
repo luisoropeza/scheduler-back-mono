@@ -102,10 +102,9 @@ public class PersonalServiceImpl implements PersonalService {
     }
 
     @Override
-    public PersonalResponse findBySelf(Long accountId) {
-        Personal personal = personalRepository.findByAccountId(accountId)
+    public Personal findBySelf(Long accountId) {
+        return personalRepository.findByAccountId(accountId)
                 .orElseThrow(() -> new ResourceNotFoundException("No se encontro el personal con el id: " + accountId));
-        return personalMapper.toResponse(personal);
     }
 
     private Personal getPersonalOrThrow(Long personalId) {
