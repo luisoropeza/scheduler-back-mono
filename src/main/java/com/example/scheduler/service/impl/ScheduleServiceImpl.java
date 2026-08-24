@@ -37,7 +37,7 @@ public class ScheduleServiceImpl implements ScheduleService {
             LocalDateTime after,
             Pageable pageable) {
         if (doctorId != null)
-            getActiveDoctorOrThrow(doctorId);
+            getActiveDoctorOrThrowById(doctorId);
         return scheduleRepository
                 .findAllByFilters(
                         doctorId,
@@ -49,51 +49,57 @@ public class ScheduleServiceImpl implements ScheduleService {
     }
 
     @Override
-    public ScheduleResponse findScheduleById(Long scheduleId, Long userId, String role) {
+    public ScheduleResponse findScheduleById(Long scheduleId, Long accountId, String role) {
         if(role.equals(ERole.DOCTOR.name()))
-            return scheduleMapper.toResponse(getScheduleOrThrow(userId,  scheduleId));
-        return scheduleMapper.toResponse(getScheduleOrThrow(scheduleId));
+            return scheduleMapper.toResponse(getScheduleOrThrowByAccountId(accountId,  scheduleId));
+        return scheduleMapper.toResponse(getScheduleOrThrowById(scheduleId));
     }
 
     @Override
     @Transactional
-    public ScheduleResponse createSchedule(Long doctorId, ScheduleRequest request) {
-        Personal doctor = getActiveDoctorOrThrow(doctorId);
+    public ScheduleResponse createSchedule(Long accountId, ScheduleRequest request) {
+        Personal doctor = getActiveDoctorOrThrowByAccountId(accountId);
         validateSlotTimes(request);
         return scheduleMapper.toResponse(scheduleRepository.save(buildSchedule(doctor, request)));
     }
 
     @Override
     @Transactional
-    public List<ScheduleResponse> createSchedulesBatch(Long doctorId, List<ScheduleRequest> requests) {
-        Personal doctor = getActiveDoctorOrThrow(doctorId);
+    public List<ScheduleResponse> createSchedulesBatch(Long accountId, List<ScheduleRequest> requests) {
+        Personal doctor = getActiveDoctorOrThrowByAccountId(accountId);
         requests.forEach(this::validateSlotTimes);
         return scheduleMapper.toResponseList(scheduleRepository.saveAll(requests.stream().map(r -> buildSchedule(doctor, r)).toList()));
     }
 
     @Override
     @Transactional
-    public void deleteSchedule(Long doctorId, Long scheduleId) {
-        getActiveDoctorOrThrow(doctorId);
-        Schedule schedule = getScheduleOrThrow(doctorId, scheduleId);
+    public void deleteScheduleById(Long accountId, Long scheduleId) {
+        getActiveDoctorOrThrowByAccountId(accountId);
+        Schedule schedule = getScheduleOrThrowByAccountId(accountId, scheduleId);
         if (schedule.getStatus() == ScheduleStatus.BOOKED)
-            throw new BusinessException("Cannot deleteSchedule a booked schedule slot");
+            throw new BusinessException("No se puede eliminar un horario reservado");
         scheduleRepository.delete(schedule);
     }
 
-    private Personal getActiveDoctorOrThrow(Long doctorId) {
-        Personal doctor = personalRepository.findById(doctorId)
-                .orElseThrow(() -> new ResourceNotFoundException("No se encontro a este usuario con el id: " + doctorId));
+    private Personal getActiveDoctorOrThrowByAccountId(Long accountId) {
+        Personal doctor = personalRepository.findByAccountId(accountId)
+                .orElseThrow(() -> new ResourceNotFoundException("No se encontro a este usuario con el id: " + accountId));
         if (!doctor.isActive()) throw new BusinessException("Este doctor no esta activo");
         return doctor;
     }
 
-    private Schedule getScheduleOrThrow(Long doctorId, Long scheduleId) {
-        return scheduleRepository.findByIdAndDoctorId(scheduleId, doctorId)
-                .orElseThrow(() -> new ResourceNotFoundException("No se encontro el horario con el id: " + scheduleId + "para el doctor con el id: " + doctorId));
+    private void getActiveDoctorOrThrowById(Long personalId) {
+        Personal doctor = personalRepository.findByAccountId(personalId)
+                .orElseThrow(() -> new ResourceNotFoundException("No se encontro a este usuario con el id: " + personalId));
+        if (!doctor.isActive()) throw new BusinessException("Este doctor no esta activo");
     }
 
-    private Schedule getScheduleOrThrow(Long scheduleId) {
+    private Schedule getScheduleOrThrowByAccountId(Long accountId, Long scheduleId) {
+        return scheduleRepository.findByIdAndDoctorAccountId(scheduleId, accountId)
+                .orElseThrow(() -> new ResourceNotFoundException("No se encontro el horario con el id: " + scheduleId + "para el doctor con el id: " + accountId));
+    }
+
+    private Schedule getScheduleOrThrowById(Long scheduleId) {
         return scheduleRepository.findById(scheduleId)
                 .orElseThrow(() -> new ResourceNotFoundException("No se encontro el horario con el id: " + scheduleId));
     }

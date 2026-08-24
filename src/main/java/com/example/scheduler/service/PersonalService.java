@@ -15,9 +15,10 @@ public interface PersonalService {
     Page<PersonalResponse> findAllPersonal(Long specialtyId, Boolean isActive, Long roleId, Pageable pageable);
     PersonalResponse findPersonalById(Long personalId);
     PersonalResponse updatePersonalById(Long personalId, PersonalRequest request);
+    PersonalResponse updatePersonalByAccountId(Long accountId, PersonalRequest request);
     void deactivatePersonalById(Long personalId);
-    void assignPatient(AssignAndRemoveRequest request, Long userId, String role);
-    void removePatient(AssignAndRemoveRequest request, Long userId, String role);
+    void assignPatient(AssignAndRemoveRequest request, Long accountId, String role);
+    void removePatient(AssignAndRemoveRequest request, Long accountId, String role);
     List<PatientResponse> getPatientsOfDoctor(Long doctorId);
-    Personal findBySelf(Long accountId);
+    Personal findByAccountId(Long accountId);
 }

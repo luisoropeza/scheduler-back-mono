@@ -47,35 +47,46 @@ public class AppointmentServiceImpl implements AppointmentService {
 
     @Override
     @Transactional
-    public AppointmentResponse bookAppointment(AppointmentRequest request, Long userId, String role) {
-        boolean isPatient = role.equals(ERole.PATIENT.name());
-        if(isPatient && userId.equals(request.getPatientId()))
-            throw new ForbiddenException("Este usuario no puede crear una cita en este recurso");
-        Schedule schedule = getScheduleOrThrow(request.getScheduleId());
-        Patient patient = getPatientOrThrow(request.getPatientId());
+    public AppointmentResponse bookAppointment(AppointmentRequest request,  Long patientId) {
+        if(!patientId.equals(request.getPatientId())){
+            throw new ForbiddenException("No puedes agendar una cita para otro paciente");
+        }
+        Schedule schedule = getScheduleOrThrowById(request.getScheduleId());
+        Patient patient = getPatientOrThrowById(request.getPatientId());
         validateAvailabilityAndDate(schedule);
         schedule.setStatus(ScheduleStatus.BOOKED);
         Appointment appointment = Appointment.builder()
                 .schedule(schedule)
                 .patient(patient)
-                .status(isPatient? AppointmentStatus.PENDING : AppointmentStatus.CONFIRMED)
+                .status(AppointmentStatus.PENDING)
                 .build();
         return appointmentMapper.toResponse(appointmentRepository.save(appointment));
     }
 
     @Override
-    public AppointmentResponse findAppointmentById(Long id) {
-        return appointmentMapper.toResponse(getAppointmentOrThrow(id));
+    @Transactional
+    public AppointmentResponse bookAppointment(AppointmentRequest request) {
+        Schedule schedule = getScheduleOrThrowById(request.getScheduleId());
+        Patient patient = getPatientOrThrowById(request.getPatientId());
+        validateAvailabilityAndDate(schedule);
+        schedule.setStatus(ScheduleStatus.BOOKED);
+        Appointment appointment = Appointment.builder()
+                .schedule(schedule)
+                .patient(patient)
+                .status(AppointmentStatus.CONFIRMED)
+                .build();
+        return appointmentMapper.toResponse(appointmentRepository.save(appointment));
     }
 
     @Override
-    public AppointmentResponse findAppointmentByIdAndDoctorId(Long doctorId, Long id) {
-        return appointmentMapper.toResponse(getAppointmentOrThrowByDoctor(id, doctorId));
-    }
-
-    @Override
-    public AppointmentResponse findAppointmentByIdAndPatientId(Long patientId, Long id) {
-        return appointmentMapper.toResponse(getAppointmentOrThrowByPatient(id, patientId));
+    public AppointmentResponse findAppointmentById(Long appointmentId, Long accountId, String role) {
+        if(role.equals(ERole.PATIENT.name())){
+            return appointmentMapper.toResponse(getAppointmentOrThrowByPatient(appointmentId, accountId));
+        }
+        if (role.equals(ERole.DOCTOR.name())){
+            return appointmentMapper.toResponse(getAppointmentOrThrowByDoctor(appointmentId, accountId));
+        }
+        return appointmentMapper.toResponse(getAppointmentOrThrowById(appointmentId));
     }
 
     @Override
@@ -85,23 +96,22 @@ public class AppointmentServiceImpl implements AppointmentService {
 
     @Override
     @Transactional
-    public AppointmentResponse confirmAppointmentById(Long id, Long patientId, String role) {
-        Appointment appointment = getAppointmentOrThrow(id);
-        if(role.equals(ERole.DOCTOR.name()))
-            if (!appointment.getSchedule().getDoctor().getAccount().getId().equals(patientId))
-                throw new ForbiddenException("Not authorized to confirmAppointmentById this appointment");
+    public AppointmentResponse confirmAppointmentById(Long AppointmentId, Long accountId, String role) {
+        Appointment appointment = getAppointmentOrThrowById(AppointmentId);
+        verifyDoctorPermission(appointment, accountId, role);
         if (appointment.getStatus() != AppointmentStatus.PENDING)
-            throw new BusinessException("Only pending appointments can be confirmed");
+            throw new BusinessException("Solo puedes confirmar citas en estado pendiente");
         appointment.setStatus(AppointmentStatus.CONFIRMED);
         return appointmentMapper.toResponse(appointmentRepository.save(appointment));
     }
 
     @Override
     @Transactional
-    public AppointmentResponse cancelAppointmentById(Long id) {
-        Appointment appointment = getAppointmentOrThrow(id);
+    public AppointmentResponse cancelAppointmentById(Long AppointmentId, Long accountId, String role) {
+        Appointment appointment = getAppointmentOrThrowById(AppointmentId);
+        verifyDoctorPermission(appointment, accountId, role);
         if (appointment.getStatus() == AppointmentStatus.CANCELLED)
-            throw new BusinessException("Appointment is already cancelled");
+            throw new BusinessException("Esta cita ya esta cancelada");
         appointment.setStatus(AppointmentStatus.CANCELLED);
         appointment.getSchedule().setStatus(ScheduleStatus.AVAILABLE);
         return appointmentMapper.toResponse(appointmentRepository.save(appointment));
@@ -109,9 +119,10 @@ public class AppointmentServiceImpl implements AppointmentService {
 
     @Override
     @Transactional
-    public AppointmentResponse rescheduleAppointmentById(Long id, RescheduleRequest request) {
-        Appointment appointment = getAppointmentOrThrow(id);
-        Schedule newSchedule = getScheduleOrThrow(request.getScheduleId());
+    public AppointmentResponse rescheduleAppointmentById(Long AppointmentId, RescheduleRequest request, Long accountId, String role) {
+        Appointment appointment = getAppointmentOrThrowById(AppointmentId);
+        verifyDoctorPermission(appointment, accountId, role);
+        Schedule newSchedule = getScheduleOrThrowById(request.getScheduleId());
         if (appointment.getStatus() == AppointmentStatus.CANCELLED)
             throw new BusinessException("Cannot rescheduleAppointmentById a cancelled appointment");
         if (newSchedule.getStatus() != ScheduleStatus.AVAILABLE)
@@ -164,29 +175,29 @@ public class AppointmentServiceImpl implements AppointmentService {
                 .build();
     }
 
-    private Appointment getAppointmentOrThrow(Long id) {
-        return appointmentRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Appointment not found with id: " + id));
+    private Appointment getAppointmentOrThrowById(Long appointmentId) {
+        return appointmentRepository.findById(appointmentId)
+                .orElseThrow(() -> new ResourceNotFoundException("Appointment not found with id: " + appointmentId));
     }
 
-    private Appointment getAppointmentOrThrowByDoctor(Long id, Long doctorId) {
-        return appointmentRepository.findByIdAndScheduleDoctorId(id, doctorId)
-                .orElseThrow(() -> new ResourceNotFoundException("Appointment not found with id: " + id));
+    private Appointment getAppointmentOrThrowByDoctor(Long appointmentId, Long accountId) {
+        return appointmentRepository.findByIdAndScheduleDoctorAccountId(appointmentId, accountId)
+                .orElseThrow(() -> new ResourceNotFoundException("Appointment not found with id: " + appointmentId));
     }
 
-    private Appointment getAppointmentOrThrowByPatient(Long id, Long patientId) {
-        return appointmentRepository.findByIdAndPatientId(id, patientId)
-                .orElseThrow(() -> new ResourceNotFoundException("Appointment not found with id: " + id));
+    private Appointment getAppointmentOrThrowByPatient(Long appointmentId, Long accountId) {
+        return appointmentRepository.findByIdAndPatientAccountId(appointmentId, accountId)
+                .orElseThrow(() -> new ResourceNotFoundException("Appointment not found with id: " + appointmentId));
     }
 
-    private Schedule getScheduleOrThrow(Long id) {
-        return scheduleRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Schedule not found with id: " + id));
+    private Schedule getScheduleOrThrowById(Long scheduleId) {
+        return scheduleRepository.findById(scheduleId)
+                .orElseThrow(() -> new ResourceNotFoundException("Schedule not found with id: " + scheduleId));
     }
 
-    private Patient getPatientOrThrow(Long id) {
-        return patientRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Patient not found with id: " + id));
+    private Patient getPatientOrThrowById(Long patientId) {
+        return patientRepository.findById(patientId)
+                .orElseThrow(() -> new ResourceNotFoundException("Patient not found with id: " + patientId));
     }
 
     private void validateAvailabilityAndDate(Schedule schedule) {
@@ -194,5 +205,11 @@ public class AppointmentServiceImpl implements AppointmentService {
             throw new BusinessException("This schedule slot is no longer available");
         if (schedule.getStartTime().isBefore(LocalDateTime.now()))
             throw new BusinessException("Cannot bookAppointment a past schedule slot");
+    }
+
+    private void verifyDoctorPermission(Appointment appointment, Long accountId, String role) {
+        if(role.equals(ERole.DOCTOR.name()))
+            if (!appointment.getSchedule().getDoctor().getAccount().getId().equals(accountId))
+                throw new ForbiddenException("No puedes confirmar la cita de otro doctor");
     }
 }

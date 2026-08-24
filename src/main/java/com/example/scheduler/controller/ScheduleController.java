@@ -44,7 +44,7 @@ public class ScheduleController {
             Authentication auth
     ) {
         if (SecurityUtils.extractRole(auth).equals(ERole.DOCTOR.name())) {
-            Personal personal = personalService.findBySelf(Long.parseLong(auth.getName()));
+            Personal personal = personalService.findByAccountId(Long.parseLong(auth.getName()));
             return ResponseEntity.ok(scheduleService.findAllSchedules(personal.getId(), specialtyId, status, after, pageable));
         }
         return ResponseEntity.ok(scheduleService.findAllSchedules(doctorId, specialtyId, status, after, pageable));
@@ -53,24 +53,21 @@ public class ScheduleController {
     @GetMapping("/{scheduleId}")
     @Operation(summary = "GET /api/schedules/{scheduleId} — get a schedule slot by ID")
     public ResponseEntity<ScheduleResponse> findScheduleById(@PathVariable Long scheduleId, Authentication auth) {
-        Personal personal = personalService.findBySelf(Long.parseLong(auth.getName()));
-        return ResponseEntity.ok(scheduleService.findScheduleById(scheduleId, personal.getId(), SecurityUtils.extractRole(auth)));
+        return ResponseEntity.ok(scheduleService.findScheduleById(scheduleId, Long.parseLong(auth.getName()), SecurityUtils.extractRole(auth)));
     }
 
     @PostMapping
     @PreAuthorize("hasRole('DOCTOR')")
     @Operation(summary = "POST /api/personal/schedules — add a single available time slot for a doctor")
     public ResponseEntity<ScheduleResponse> createSchedule(@Valid @RequestBody ScheduleRequest request, Authentication auth) {
-        Personal personal = personalService.findBySelf(Long.parseLong(auth.getName()));
-        return ResponseEntity.status(HttpStatus.CREATED).body(scheduleService.createSchedule(personal.getId(), request));
+        return ResponseEntity.status(HttpStatus.CREATED).body(scheduleService.createSchedule(Long.parseLong(auth.getName()), request));
     }
 
     @PostMapping("/batch")
     @PreAuthorize("hasRole('DOCTOR')")
     @Operation(summary = "POST /api/personal/schedules/batch — add multiple available time slots for a doctor")
     public ResponseEntity<List<ScheduleResponse>> createSchedulesBatch(@Valid @RequestBody List<ScheduleRequest> requests, Authentication auth) {
-        Personal personal = personalService.findBySelf(Long.parseLong(auth.getName()));
-        return ResponseEntity.status(HttpStatus.CREATED).body(scheduleService.createSchedulesBatch(personal.getId(), requests));
+        return ResponseEntity.status(HttpStatus.CREATED).body(scheduleService.createSchedulesBatch(Long.parseLong(auth.getName()), requests));
     }
 
     @DeleteMapping("/{scheduleId}")
@@ -80,8 +77,7 @@ public class ScheduleController {
             @PathVariable Long scheduleId,
             Authentication auth
     ) {
-        Personal personal = personalService.findBySelf(Long.parseLong(auth.getName()));
-        scheduleService.deleteSchedule(personal.getId(), scheduleId);
+        scheduleService.deleteScheduleById(Long.parseLong(auth.getName()), scheduleId);
         return ResponseEntity.noContent().build();
     }
 }

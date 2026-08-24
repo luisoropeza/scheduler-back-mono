@@ -31,7 +31,7 @@ public class PersonalController {
 
     @GetMapping("/doctors")
     @PreAuthorize("hasAnyRole('PATIENT', 'RECEPTIONIST')")
-    @Operation(summary = "GET /api/personal/doctors — list staff members, filter by ?specialtyId={specialtyId}?isActive={isActive}")
+    @Operation(summary = "GET /api/personal/doctors — list doctors members, filter by ?specialtyId={specialtyId}?isActive={isActive}")
     public ResponseEntity<Page<PersonalResponse>> findAllDoctors(
             @RequestParam(required = false) Long specialtyId,
             @RequestParam(required = false) Boolean isActive,
@@ -40,7 +40,7 @@ public class PersonalController {
         return ResponseEntity.ok(personalService.findAllDoctors(specialtyId, isActive, pageable));
     }
 
-    @GetMapping
+    @GetMapping("/all")
     @PreAuthorize("hasAnyRole('ADMINISTRATOR')")
     @Operation(summary = "GET /api/personal — list staff of any role, filter by ?specialtyId={specialtyId}&isActive={isActive}&role={role}")
     public ResponseEntity<Page<PersonalResponse>> findAllPersonal(
@@ -69,35 +69,31 @@ public class PersonalController {
     @PutMapping("/update")
     @PreAuthorize("hasAnyRole('DOCTOR, RECEPTIONIST')")
     @Operation(summary = "PUT /api/personal — update by self name, email, role, or specialty of a staff member")
-    public ResponseEntity<PersonalResponse> updatePersonalBySelf(@Valid @RequestBody PersonalRequest request, Authentication auth) {
-        Personal personal = personalService.findBySelf(Long.parseLong(auth.getName()));
-        return ResponseEntity.ok(personalService.updatePersonalById(personal.getId(), request));
+    public ResponseEntity<PersonalResponse> updatePersonalProfile(@Valid @RequestBody PersonalRequest request, Authentication auth) {
+        return ResponseEntity.ok(personalService.updatePersonalByAccountId(Long.parseLong(auth.getName()), request));
     }
 
     @DeleteMapping("deactivate/{personalId}")
     @PreAuthorize("hasAnyRole('ADMINISTRATOR')")
-    @Operation(summary = "DELETE /api/personal/{personalId} — deactivate a patient (soft-deleteSchedule) a staff member")
+    @Operation(summary = "DELETE /api/personal/{personalId} — deactivate a patient (soft-deleteScheduleById) a staff member")
     public ResponseEntity<Void> deactivatePersonalById(@PathVariable Long personalId) {
         personalService.deactivatePersonalById(personalId);
         return ResponseEntity.noContent().build();
     }
 
     @PostMapping("/patients/assign")
-    @PreAuthorize("hasAnyRole('RECEPTIONIST')")
-    @Operation(summary = "POST /api/personal/{doctorId}/patients/{patientId} — assign a patient to a doctor")
+    @PreAuthorize("hasAnyRole('DOCTOR, RECEPTIONIST')")
+    @Operation(summary = "POST /api/personal/patients/assign — assign a patient to a doctor")
     public ResponseEntity<Void> assignPatient(@Valid AssignAndRemoveRequest request, Authentication auth) {
-        Personal personal = personalService.findBySelf(Long.parseLong(auth.getName()));
-        personalService.assignPatient(request, personal.getId(), SecurityUtils.extractRole(auth));
+        personalService.assignPatient(request, Long.parseLong(auth.getName()), SecurityUtils.extractRole(auth));
         return ResponseEntity.noContent().build();
     }
 
     @DeleteMapping("/patients/remove")
-    @PreAuthorize("hasAnyRole('RECEPTIONIST')")
-    @Operation(summary = "DELETE /api/personal/{doctorId}/patients/{patientId} — remove a patient from a doctor")
+    @PreAuthorize("hasAnyRole('DOCTOR, RECEPTIONIST')")
+    @Operation(summary = "DELETE /api/personal/patients/remove — remove a patient from a doctor")
     public ResponseEntity<Void> removePatient(@Valid AssignAndRemoveRequest request, Authentication auth) {
-
-        Personal personal = personalService.findBySelf(Long.parseLong(auth.getName()));
-        personalService.removePatient(request, personal.getId(), SecurityUtils.extractRole(auth));
+        personalService.removePatient(request, Long.parseLong(auth.getName()), SecurityUtils.extractRole(auth));
         return ResponseEntity.noContent().build();
     }
 

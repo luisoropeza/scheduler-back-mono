@@ -32,7 +32,7 @@ public class PatientServiceImpl implements PatientService {
 
     @Override
     public PatientResponse findPatientById(Long patientId) {
-        return patientMapper.toResponse(getPatientOrThrow(patientId));
+        return patientMapper.toResponse(getPatientOrThrowById(patientId));
     }
 
     @Override
@@ -44,7 +44,14 @@ public class PatientServiceImpl implements PatientService {
     @Override
     @Transactional
     public PatientResponse updatePatientById(Long patientId, PatientRequest request) {
-        Patient patient = getPatientOrThrow(patientId);
+        Patient patient = getPatientOrThrowById(patientId);
+        patientMapper.toEntityUpdated(request, patient);
+        return patientMapper.toResponse(patientRepository.save(patient));
+    }
+
+    @Override
+    public PatientResponse updatePatientByAccountId(Long accountId, PatientRequest request) {
+        Patient patient = getPatientOrThrowByAccountId(accountId);
         patientMapper.toEntityUpdated(request, patient);
         return patientMapper.toResponse(patientRepository.save(patient));
     }
@@ -52,25 +59,29 @@ public class PatientServiceImpl implements PatientService {
     @Override
     @Transactional
     public void deactivatePatientById(Long patientId) {
-        Patient patient = getPatientOrThrow(patientId);
+        Patient patient = getPatientOrThrowById(patientId);
         patient.setActive(false);
         patientRepository.save(patient);
     }
 
     @Override
     public List<PersonalResponse> getDoctorsOfPatient(Long patientId) {
-        Patient patient = getPatientOrThrow(patientId);
+        Patient patient = getPatientOrThrowById(patientId);
         return personalMapper.toResponseList(patient.getDoctors());
     }
 
     @Override
-    public Patient findBySelf(Long accountId) {
-        return patientRepository.findByAccountId(accountId)
-                .orElseThrow(() -> new ResourceNotFoundException("No se encontro el paciente con el accountId: " + accountId));
+    public Patient findByAccountId(Long accountId) {
+        return getPatientOrThrowByAccountId(accountId);
     }
 
-    private Patient getPatientOrThrow(Long id) {
-        return patientRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("No se encontro el paciente con el id: " + id));
+    private Patient getPatientOrThrowById(Long patientId) {
+        return patientRepository.findById(patientId)
+                .orElseThrow(() -> new ResourceNotFoundException("No se encontro el paciente con el id: " + patientId));
+    }
+
+    private Patient getPatientOrThrowByAccountId(Long accountId) {
+        return patientRepository.findById(accountId)
+                .orElseThrow(() -> new ResourceNotFoundException("No se encontro el paciente con el id: " + accountId));
     }
 }

@@ -11,8 +11,8 @@ import java.util.List;
 
 public interface ScheduleService {
     Page<ScheduleResponse> findAllSchedules(Long doctorId, Long specialtyId, ScheduleStatus status, LocalDateTime after, Pageable pageable);
-    ScheduleResponse findScheduleById(Long scheduleId, Long userId, String role);
-    ScheduleResponse createSchedule(Long doctorId, ScheduleRequest request);
-    List<ScheduleResponse> createSchedulesBatch(Long doctorId, List<ScheduleRequest> requests);
-    void deleteSchedule(Long doctorId, Long scheduleId);
+    ScheduleResponse findScheduleById(Long scheduleId, Long accountId, String role);
+    ScheduleResponse createSchedule(Long accountId, ScheduleRequest request);
+    List<ScheduleResponse> createSchedulesBatch(Long accountId, List<ScheduleRequest> requests);
+    void deleteScheduleById(Long accountId, Long scheduleId);
 }

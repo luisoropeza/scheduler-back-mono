@@ -53,12 +53,12 @@ public class PatientController {
     @PreAuthorize("hasAnyRole('PATIENT')")
     @Operation(summary = "PUT /api/patients/{id} — update self patient information")
     public ResponseEntity<PatientResponse> updatePatientProfile(@Valid @RequestBody PatientRequest request, Authentication auth) {
-        return ResponseEntity.ok(patientService.updatePatientById(Long.parseLong(auth.getName()), request));
+        return ResponseEntity.ok(patientService.updatePatientByAccountId(Long.parseLong(auth.getName()), request));
     }
 
     @DeleteMapping("/{patientId}")
     @PreAuthorize("hasAnyRole('DOCTOR', 'RECEPTIONIST')")
-    @Operation(summary = "DELETE /api/patients/{patientId} — deactivate a patient (soft-deleteSchedule) a patient account")
+    @Operation(summary = "DELETE /api/patients/{patientId} — deactivate a patient (soft-deleteScheduleById) a patient account")
     public ResponseEntity<Void> deactivatePatientById(@PathVariable Long patientId) {
         patientService.deactivatePatientById(patientId);
         return ResponseEntity.noContent().build();

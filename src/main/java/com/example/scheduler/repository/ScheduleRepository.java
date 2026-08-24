@@ -25,5 +25,5 @@ public interface ScheduleRepository extends JpaRepository<Schedule, Long> {
             @Param("after") LocalDateTime after,
             Pageable pageable
     );
-    Optional<Schedule> findByIdAndDoctorId(Long id, Long doctorId);
+    Optional<Schedule> findByIdAndDoctorAccountId(Long id, Long accountId);
 }

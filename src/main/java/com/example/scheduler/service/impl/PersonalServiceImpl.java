@@ -37,28 +37,35 @@ public class PersonalServiceImpl implements PersonalService {
 
     @Override
     public Page<PersonalResponse> findAllDoctors(Long specialtyId, Boolean isActive, Pageable pageable) {
-        getSpecialtyOrThrow(specialtyId);
+        getSpecialtyOrThrowById(specialtyId);
         return personalRepository.findAllDoctorsByFilters(specialtyId, isActive, pageable)
                 .map(personalMapper::toResponse);
     }
 
     @Override
     public Page<PersonalResponse> findAllPersonal(Long specialtyId, Boolean isActive, Long roleId, Pageable pageable) {
-        getSpecialtyOrThrow(specialtyId);
-        getRoleOrThrow(roleId);
+        getSpecialtyOrThrowById(specialtyId);
+        getRoleOrThrowById(roleId);
         return personalRepository.findAllByFilters(specialtyId, isActive, roleId, pageable)
                 .map(personalMapper::toResponse);
     }
 
     @Override
     public PersonalResponse findPersonalById(Long personalId) {
-        return personalMapper.toResponse(getPersonalOrThrow(personalId));
+        return personalMapper.toResponse(getPersonalOrThrowById(personalId));
     }
 
     @Override
     @Transactional
     public PersonalResponse updatePersonalById(Long personalId, PersonalRequest request) {
-        Personal personal = getPersonalOrThrow(personalId);
+        Personal personal = getPersonalOrThrowById(personalId);
+        personalMapper.toEntityUpdated(request, personal);
+        return personalMapper.toResponse(personalRepository.save(personal));
+    }
+
+    @Override
+    public PersonalResponse updatePersonalByAccountId(Long accountId, PersonalRequest request) {
+        Personal personal = getPersonalOrThrowByAccountId(accountId);
         personalMapper.toEntityUpdated(request, personal);
         return personalMapper.toResponse(personalRepository.save(personal));
     }
@@ -66,17 +73,18 @@ public class PersonalServiceImpl implements PersonalService {
     @Override
     @Transactional
     public void deactivatePersonalById(Long personalId) {
-        Personal personal = getPersonalOrThrow(personalId);
+        Personal personal = getPersonalOrThrowById(personalId);
         personal.setActive(false);
         personalRepository.save(personal);
     }
 
     @Override
     @Transactional
-    public void assignPatient(AssignAndRemoveRequest request, Long userId, String role) {
-        verifyDoctorPermission(role, request.getDoctorId(), userId);
-        Personal doctor = getPersonalOrThrow(request.getDoctorId());
-        Patient patient = getPatientOrThrow(request.getPatientId());
+    public void assignPatient(AssignAndRemoveRequest request, Long accountId, String role) {
+        Personal personal = getPersonalOrThrowByAccountId(accountId);
+        verifyDoctorPermission(role, request.getDoctorId(), personal.getId());
+        Personal doctor = getPersonalOrThrowById(request.getDoctorId());
+        Patient patient = getPatientOrThrowById(request.getPatientId());
         if (!doctor.getPatients().contains(patient)) {
             doctor.getPatients().add(patient);
             personalRepository.save(doctor);
@@ -85,10 +93,11 @@ public class PersonalServiceImpl implements PersonalService {
 
     @Override
     @Transactional
-    public void removePatient(AssignAndRemoveRequest request, Long userId, String role) {
-        verifyDoctorPermission(role, request.getDoctorId(), userId);
-        Personal doctor = getPersonalOrThrow(request.getDoctorId());
-        Patient patient = getPatientOrThrow(request.getPatientId());
+    public void removePatient(AssignAndRemoveRequest request, Long accountId, String role) {
+        Personal personal = getPersonalOrThrowByAccountId(accountId);
+        verifyDoctorPermission(role, request.getDoctorId(), personal.getId());
+        Personal doctor = getPersonalOrThrowById(request.getDoctorId());
+        Patient patient = getPatientOrThrowById(request.getPatientId());
         if (doctor.getPatients().contains(patient)) {
             doctor.getPatients().remove(patient);
             personalRepository.save(doctor);
@@ -97,32 +106,36 @@ public class PersonalServiceImpl implements PersonalService {
 
     @Override
     public List<PatientResponse> getPatientsOfDoctor(Long doctorId) {
-        Personal doctor = getPersonalOrThrow(doctorId);
+        Personal doctor = getPersonalOrThrowById(doctorId);
         return patientMapper.toResponseList(doctor.getPatients());
     }
 
     @Override
-    public Personal findBySelf(Long accountId) {
-        return personalRepository.findByAccountId(accountId)
-                .orElseThrow(() -> new ResourceNotFoundException("No se encontro el personal con el id: " + accountId));
+    public Personal findByAccountId(Long accountId) {
+        return getPersonalOrThrowByAccountId(accountId);
     }
 
-    private Personal getPersonalOrThrow(Long personalId) {
+    private Personal getPersonalOrThrowById(Long personalId) {
         return personalRepository.findById(personalId)
                 .orElseThrow(() -> new ResourceNotFoundException("No se encontro el personal con el id: " + personalId));
     }
 
-    private void getSpecialtyOrThrow(Long specialtyId) {
+    private Personal getPersonalOrThrowByAccountId(Long accountId) {
+        return personalRepository.findByAccountId(accountId)
+                .orElseThrow(() -> new ResourceNotFoundException("No se encontro el personal con el id: " + accountId));
+    }
+
+    private void getSpecialtyOrThrowById(Long specialtyId) {
         specialtyRepository.findById(specialtyId)
                 .orElseThrow(() -> new ResourceNotFoundException("No se encontro la especialidad con el specialtyId: " + specialtyId));
     }
 
-    private void getRoleOrThrow(Long roleId) {
+    private void getRoleOrThrowById(Long roleId) {
         roleRepository.findById(roleId)
                 .orElseThrow(() -> new ResourceNotFoundException("No se encontro el role con el roleId " + roleId));
     }
 
-    private Patient getPatientOrThrow(Long patientId) {
+    private Patient getPatientOrThrowById(Long patientId) {
         return patientRepository.findById(patientId)
                 .orElseThrow(() -> new ResourceNotFoundException("No se encontro el paciente con el patientId: " + patientId));
     }
