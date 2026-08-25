@@ -15,4 +15,6 @@ public interface PatientRepository extends JpaRepository<Patient, Long> {
     Optional<Patient> findByAccountId(Long accountId);
     Optional<Patient> findByAccountPhoneNumber(String phoneNumber);
     boolean existsByAccountId(Long accountId);
+    @Query("SELECT p.id FROM Patient p WHERE p.account.id = :accountId")
+    Optional<Long> findIdByAccountId(@Param("accountId") Long accountId);
 }

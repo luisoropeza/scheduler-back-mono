@@ -14,5 +14,5 @@ public interface ScheduleService {
     ScheduleResponse findScheduleById(Long scheduleId, Long accountId, String role);
     ScheduleResponse createSchedule(Long accountId, ScheduleRequest request);
     List<ScheduleResponse> createSchedulesBatch(Long accountId, List<ScheduleRequest> requests);
-    void deleteScheduleById(Long accountId, Long scheduleId);
+    void deleteScheduleById(Long scheduleId, Long accountId);
 }

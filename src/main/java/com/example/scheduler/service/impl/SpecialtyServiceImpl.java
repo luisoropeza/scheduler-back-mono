@@ -28,7 +28,7 @@ public class SpecialtyServiceImpl implements SpecialtyService {
     @Transactional
     public SpecialtyResponse createSpecialty(SpecialtyRequest request) {
         if (specialtyRepository.existsByName(request.getName())) {
-            throw new BusinessException("Esta especialidad ya existe en esta clinica");
+            throw new BusinessException("This specialty already exists");
         }
         return specialtyMapper.toResponse(specialtyRepository.save(specialtyMapper.toEntity(request)));
     }

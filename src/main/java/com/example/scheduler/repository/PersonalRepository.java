@@ -26,5 +26,7 @@ public interface PersonalRepository extends JpaRepository<Personal, Long> {
     @Query(value = "SELECT DISTINCT clinic_id FROM personal WHERE personal_account_id = :accountId", nativeQuery = true)
     List<String> findClinicIdsByAccountId(@Param("accountId") Long accountId);
     Optional<Personal> findByAccountId(Long accountId);
+    @Query("SELECT p.id FROM Personal p WHERE p.account.id = :accountId")
+    Optional<Long> findIdByAccountId(@Param("accountId") Long accountId);
     boolean existsByAccountId(Long accountId);
 }

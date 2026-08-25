@@ -7,6 +7,7 @@ import com.example.scheduler.entity.Schedule;
 import com.example.scheduler.enums.ERole;
 import com.example.scheduler.enums.ScheduleStatus;
 import com.example.scheduler.exception.BusinessException;
+import com.example.scheduler.exception.ForbiddenException;
 import com.example.scheduler.exception.ResourceNotFoundException;
 import com.example.scheduler.mapper.ScheduleMapper;
 import com.example.scheduler.repository.PersonalRepository;
@@ -50,8 +51,12 @@ public class ScheduleServiceImpl implements ScheduleService {
 
     @Override
     public ScheduleResponse findScheduleById(Long scheduleId, Long accountId, String role) {
-        if(role.equals(ERole.DOCTOR.name()))
-            return scheduleMapper.toResponse(getScheduleOrThrowByAccountId(accountId,  scheduleId));
+        if(role.equals(ERole.DOCTOR.name())){
+            getActiveDoctorOrThrowByAccountId(accountId);
+            Schedule schedule = getScheduleOrThrowById(scheduleId);
+            verifyDoctorPermission(schedule, accountId);
+            return scheduleMapper.toResponse(schedule);
+        }
         return scheduleMapper.toResponse(getScheduleOrThrowById(scheduleId));
     }
 
@@ -73,40 +78,42 @@ public class ScheduleServiceImpl implements ScheduleService {
 
     @Override
     @Transactional
-    public void deleteScheduleById(Long accountId, Long scheduleId) {
+    public void deleteScheduleById(Long scheduleId, Long accountId) {
         getActiveDoctorOrThrowByAccountId(accountId);
-        Schedule schedule = getScheduleOrThrowByAccountId(accountId, scheduleId);
+        Schedule schedule = getScheduleOrThrowById(scheduleId);
+        verifyDoctorPermission(schedule, accountId);
         if (schedule.getStatus() == ScheduleStatus.BOOKED)
-            throw new BusinessException("No se puede eliminar un horario reservado");
+            throw new BusinessException("Can't remove schedule already booked");
         scheduleRepository.delete(schedule);
     }
 
     private Personal getActiveDoctorOrThrowByAccountId(Long accountId) {
         Personal doctor = personalRepository.findByAccountId(accountId)
-                .orElseThrow(() -> new ResourceNotFoundException("No se encontro a este usuario con el id: " + accountId));
-        if (!doctor.isActive()) throw new BusinessException("Este doctor no esta activo");
+                .orElseThrow(() -> new ResourceNotFoundException("Doctor not found with accountId: " + accountId));
+        if (!doctor.isActive()) throw new BusinessException("This doctor is not active");
         return doctor;
     }
 
     private void getActiveDoctorOrThrowById(Long personalId) {
-        Personal doctor = personalRepository.findByAccountId(personalId)
-                .orElseThrow(() -> new ResourceNotFoundException("No se encontro a este usuario con el id: " + personalId));
-        if (!doctor.isActive()) throw new BusinessException("Este doctor no esta activo");
-    }
-
-    private Schedule getScheduleOrThrowByAccountId(Long accountId, Long scheduleId) {
-        return scheduleRepository.findByIdAndDoctorAccountId(scheduleId, accountId)
-                .orElseThrow(() -> new ResourceNotFoundException("No se encontro el horario con el id: " + scheduleId + "para el doctor con el id: " + accountId));
+        Personal doctor = personalRepository.findById(personalId)
+                .orElseThrow(() -> new ResourceNotFoundException("Doctor not found with id: " + personalId));
+        if (!doctor.isActive()) throw new BusinessException("This doctor is not active");
     }
 
     private Schedule getScheduleOrThrowById(Long scheduleId) {
         return scheduleRepository.findById(scheduleId)
-                .orElseThrow(() -> new ResourceNotFoundException("No se encontro el horario con el id: " + scheduleId));
+                .orElseThrow(() -> new ResourceNotFoundException("Schedule not found with id: " + scheduleId));
+    }
+
+    private void verifyDoctorPermission(Schedule schedule, Long personalId) {
+        if(!schedule.getDoctor().getAccount().getId().equals(personalId)){
+            throw new ForbiddenException("Can't remove a schedule that doesn't belong to you.");
+        }
     }
 
     private void validateSlotTimes(ScheduleRequest request) {
         if (!request.getEndTime().isAfter(request.getStartTime()))
-            throw new BusinessException("La hora de finalizacion debe ser despues de la hora de inicio");
+            throw new BusinessException("The end time must be after the start time");
     }
 
     private Schedule buildSchedule(Personal doctor, ScheduleRequest request) {

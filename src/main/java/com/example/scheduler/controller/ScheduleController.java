@@ -2,7 +2,6 @@ package com.example.scheduler.controller;
 
 import com.example.scheduler.dto.schedule.ScheduleRequest;
 import com.example.scheduler.dto.schedule.ScheduleResponse;
-import com.example.scheduler.entity.Personal;
 import com.example.scheduler.enums.ERole;
 import com.example.scheduler.enums.ScheduleStatus;
 import com.example.scheduler.security.SecurityUtils;
@@ -28,13 +27,13 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/schedules")
 @RequiredArgsConstructor
-@Tag(name = "Schedules", description = "Manage and browse time slots")
+@Tag(name = "Schedules", description = "Schedules Controller")
 public class ScheduleController {
     private final ScheduleService scheduleService;
     private final PersonalService personalService;
 
     @GetMapping
-    @Operation(summary = "GET /api/schedules — browse slots, filter by ?doctorId={doctorId}?specialtyId={specialtyId}?status={status}?after={after}")
+    @Operation(summary = "GET /api/schedules — list all schedules, filter by ?doctorId={doctorId}?specialtyId={specialtyId}?status={status}?after={after}")
     public ResponseEntity<Page<ScheduleResponse>> findAllSchedules(
             @RequestParam(required = false) Long doctorId,
             @RequestParam(required = false) Long specialtyId,
@@ -44,14 +43,14 @@ public class ScheduleController {
             Authentication auth
     ) {
         if (SecurityUtils.extractRole(auth).equals(ERole.DOCTOR.name())) {
-            Personal personal = personalService.findByAccountId(Long.parseLong(auth.getName()));
-            return ResponseEntity.ok(scheduleService.findAllSchedules(personal.getId(), specialtyId, status, after, pageable));
+            doctorId = personalService.findIdByAccountId(Long.parseLong(auth.getName()));
+            return ResponseEntity.ok(scheduleService.findAllSchedules(doctorId, specialtyId, status, after, pageable));
         }
         return ResponseEntity.ok(scheduleService.findAllSchedules(doctorId, specialtyId, status, after, pageable));
     }
 
     @GetMapping("/{scheduleId}")
-    @Operation(summary = "GET /api/schedules/{scheduleId} — get a schedule slot by ID")
+    @Operation(summary = "GET /api/schedules/{scheduleId} — get a schedule slot by id")
     public ResponseEntity<ScheduleResponse> findScheduleById(@PathVariable Long scheduleId, Authentication auth) {
         return ResponseEntity.ok(scheduleService.findScheduleById(scheduleId, Long.parseLong(auth.getName()), SecurityUtils.extractRole(auth)));
     }
@@ -73,11 +72,8 @@ public class ScheduleController {
     @DeleteMapping("/{scheduleId}")
     @PreAuthorize("hasRole('DOCTOR')")
     @Operation(summary = "DELETE /api/personal/schedules/{scheduleId} — remove an available slot")
-    public ResponseEntity<Void> deleteSchedule(
-            @PathVariable Long scheduleId,
-            Authentication auth
-    ) {
-        scheduleService.deleteScheduleById(Long.parseLong(auth.getName()), scheduleId);
+    public ResponseEntity<Void> deleteSchedule(@PathVariable Long scheduleId, Authentication auth) {
+        scheduleService.deleteScheduleById(scheduleId, Long.parseLong(auth.getName()));
         return ResponseEntity.noContent().build();
     }
 }

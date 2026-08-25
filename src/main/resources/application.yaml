@@ -37,7 +37,7 @@ jwt:
   secret: ${JWT_SECRET:change-me-in-production-minimum-32-chars!}
 
 security:
-  public-paths: /api/auth/login, /api/clinics/**, /swagger-ui/**, /v3/api-docs/**
+  public-paths: /api/auth/login, /api/clinics, /swagger-ui/**, /v3/api-docs/**
   tenant-exempt-paths: /api/auth/login, /api/clinics/**, /swagger-ui/**, /v3/api-docs/**
 
 n8n:

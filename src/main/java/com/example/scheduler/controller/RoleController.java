@@ -14,12 +14,12 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/roles")
 @RequiredArgsConstructor
-@Tag(name = "Roles", description = "Available staff roles")
+@Tag(name = "Roles", description = "Roles Controller")
 public class RoleController {
     private final RoleService roleService;
 
     @GetMapping
-    @PreAuthorize("hasAnyRole('DOCTOR', 'RECEPTIONIST', 'SUPERVISOR', 'ADMINISTRATOR')")
+    @PreAuthorize("hasAnyRole('DOCTOR', 'RECEPTIONIST', 'ADMINISTRATOR')")
     @Operation(summary = "GET /api/roles — list all available staff roles")
     public ResponseEntity<List<RoleResponse>> findAllRoles() {
         return ResponseEntity.ok(roleService.findAllRoles());

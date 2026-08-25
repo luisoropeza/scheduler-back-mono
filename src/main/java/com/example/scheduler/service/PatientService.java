@@ -17,5 +17,5 @@ public interface PatientService {
     PatientResponse updatePatientByAccountId(Long accountId, PatientRequest request);
     void deactivatePatientById(Long patientId);
     List<PersonalResponse> getDoctorsOfPatient(Long patientId);
-    Patient findByAccountId(Long accountId);
+    Long findIdByAccountId(Long accountId);
 }

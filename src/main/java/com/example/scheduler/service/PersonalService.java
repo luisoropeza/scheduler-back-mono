@@ -20,5 +20,5 @@ public interface PersonalService {
     void assignPatient(AssignAndRemoveRequest request, Long accountId, String role);
     void removePatient(AssignAndRemoveRequest request, Long accountId, String role);
     List<PatientResponse> getPatientsOfDoctor(Long doctorId);
-    Personal findByAccountId(Long accountId);
+    Long findIdByAccountId(Long accountId);
 }

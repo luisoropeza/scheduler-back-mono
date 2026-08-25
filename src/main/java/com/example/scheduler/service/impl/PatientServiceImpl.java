@@ -38,7 +38,7 @@ public class PatientServiceImpl implements PatientService {
     @Override
     public PatientResponse findPatientByPhoneNumber(String phoneNumber) {
         return patientMapper.toResponse(patientRepository.findByAccountPhoneNumber(phoneNumber)
-                .orElseThrow(() -> new ResourceNotFoundException("No se encontro el paciente con el numero telefonico: " + phoneNumber)));
+                .orElseThrow(() -> new ResourceNotFoundException("Patient not found with phone number: " + phoneNumber)));
     }
 
     @Override
@@ -71,17 +71,22 @@ public class PatientServiceImpl implements PatientService {
     }
 
     @Override
-    public Patient findByAccountId(Long accountId) {
-        return getPatientOrThrowByAccountId(accountId);
+    public Long findIdByAccountId(Long accountId) {
+        return getPatientIdOrThrowByAccountId(accountId);
     }
 
     private Patient getPatientOrThrowById(Long patientId) {
         return patientRepository.findById(patientId)
-                .orElseThrow(() -> new ResourceNotFoundException("No se encontro el paciente con el id: " + patientId));
+                .orElseThrow(() -> new ResourceNotFoundException("Patient not found with id: " + patientId));
     }
 
     private Patient getPatientOrThrowByAccountId(Long accountId) {
-        return patientRepository.findById(accountId)
-                .orElseThrow(() -> new ResourceNotFoundException("No se encontro el paciente con el id: " + accountId));
+        return patientRepository.findByAccountId(accountId)
+                .orElseThrow(() -> new ResourceNotFoundException("Patient not found with accountId: " + accountId));
+    }
+
+    private Long getPatientIdOrThrowByAccountId(Long accountId) {
+        return patientRepository.findIdByAccountId(accountId)
+                .orElseThrow(() -> new ResourceNotFoundException("Patient not found with accountId: " + accountId));
     }
 }

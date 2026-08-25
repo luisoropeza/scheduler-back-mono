@@ -90,6 +90,6 @@ public class IntegrationController {
     @Operation(summary = "POST /api/integrations/n8n/appointments — bookAppointment a schedule slot for the patient identified by phoneNumber")
     public ResponseEntity<AppointmentResponse> book(@RequestParam Long id, @Valid @RequestBody AppointmentRequest request) {
         return ResponseEntity.status(HttpStatus.CREATED)
-                .body(appointmentService.bookAppointment(request, id, ERole.PATIENT.name()));
+                .body(appointmentService.bookAppointment(request, id));
     }
 }

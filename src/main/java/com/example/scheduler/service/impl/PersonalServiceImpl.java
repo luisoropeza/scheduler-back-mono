@@ -81,10 +81,9 @@ public class PersonalServiceImpl implements PersonalService {
     @Override
     @Transactional
     public void assignPatient(AssignAndRemoveRequest request, Long accountId, String role) {
-        Personal personal = getPersonalOrThrowByAccountId(accountId);
-        verifyDoctorPermission(role, request.getDoctorId(), personal.getId());
         Personal doctor = getPersonalOrThrowById(request.getDoctorId());
         Patient patient = getPatientOrThrowById(request.getPatientId());
+        verifyDoctorPermission(role, doctor.getAccount().getId(), accountId);
         if (!doctor.getPatients().contains(patient)) {
             doctor.getPatients().add(patient);
             personalRepository.save(doctor);
@@ -94,10 +93,9 @@ public class PersonalServiceImpl implements PersonalService {
     @Override
     @Transactional
     public void removePatient(AssignAndRemoveRequest request, Long accountId, String role) {
-        Personal personal = getPersonalOrThrowByAccountId(accountId);
-        verifyDoctorPermission(role, request.getDoctorId(), personal.getId());
         Personal doctor = getPersonalOrThrowById(request.getDoctorId());
         Patient patient = getPatientOrThrowById(request.getPatientId());
+        verifyDoctorPermission(role, doctor.getAccount().getId(), accountId);
         if (doctor.getPatients().contains(patient)) {
             doctor.getPatients().remove(patient);
             personalRepository.save(doctor);
@@ -111,8 +109,8 @@ public class PersonalServiceImpl implements PersonalService {
     }
 
     @Override
-    public Personal findByAccountId(Long accountId) {
-        return getPersonalOrThrowByAccountId(accountId);
+    public Long findIdByAccountId(Long accountId) {
+        return getPersonalIdOrThrowByAccountId(accountId);
     }
 
     private Personal getPersonalOrThrowById(Long personalId) {
@@ -122,6 +120,11 @@ public class PersonalServiceImpl implements PersonalService {
 
     private Personal getPersonalOrThrowByAccountId(Long accountId) {
         return personalRepository.findByAccountId(accountId)
+                .orElseThrow(() -> new ResourceNotFoundException("No se encontro el personal con el id: " + accountId));
+    }
+
+    private Long getPersonalIdOrThrowByAccountId(Long accountId) {
+        return personalRepository.findIdByAccountId(accountId)
                 .orElseThrow(() -> new ResourceNotFoundException("No se encontro el personal con el id: " + accountId));
     }
 
@@ -140,9 +143,9 @@ public class PersonalServiceImpl implements PersonalService {
                 .orElseThrow(() -> new ResourceNotFoundException("No se encontro el paciente con el patientId: " + patientId));
     }
 
-    public void verifyDoctorPermission(String role, Long doctorId, Long userId) {
+    public void verifyDoctorPermission(String role, Long accountId, Long userId) {
 
-        if (role.equals(ERole.DOCTOR.name()) && !doctorId.equals(userId))
+        if (role.equals(ERole.DOCTOR.name()) && !accountId.equals(userId))
             throw new ForbiddenException("Este usuario no tiene permitido usar este recurso");
     }
 }

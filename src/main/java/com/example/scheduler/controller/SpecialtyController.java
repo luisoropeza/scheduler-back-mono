@@ -17,7 +17,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/specialties")
 @RequiredArgsConstructor
-@Tag(name = "Specialties", description = "Available specialties")
+@Tag(name = "Specialties", description = "Specialties Controller")
 public class SpecialtyController {
     private final SpecialtyService specialtyService;
 

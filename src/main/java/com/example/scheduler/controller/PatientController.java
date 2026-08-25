@@ -22,29 +22,27 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/patients")
 @RequiredArgsConstructor
-@Tag(name = "Patients", description = "Manage patients")
+@Tag(name = "Patients", description = "Patients Controller")
 public class PatientController {
     private final PatientService patientService;
 
     @GetMapping
     @PreAuthorize("hasAnyRole('DOCTOR', 'RECEPTIONIST')")
     @Operation(summary = "GET /api/patients — list all patients")
-    public ResponseEntity<Page<PatientResponse>> findAllPatients(
-            @PageableDefault(sort = "id", direction = Sort.Direction.ASC) Pageable pageable
-    ) {
+    public ResponseEntity<Page<PatientResponse>> findAllPatients(@PageableDefault(sort = "id", direction = Sort.Direction.ASC) Pageable pageable) {
         return ResponseEntity.ok(patientService.findAllPatients(pageable));
     }
 
     @GetMapping("/{patientId}")
     @PreAuthorize("hasAnyRole('DOCTOR', 'RECEPTIONIST')")
-    @Operation(summary = "GET /api/patients/{patientId} — get a patient by ID")
+    @Operation(summary = "GET /api/patients/{patientId} — get a patient by id")
     public ResponseEntity<PatientResponse> findPatientById(@PathVariable Long patientId) {
         return ResponseEntity.ok(patientService.findPatientById(patientId));
     }
 
     @PutMapping("/update/{patientId}")
     @PreAuthorize("hasAnyRole('DOCTOR', 'RECEPTIONIST')")
-    @Operation(summary = "PUT /api/patients/{patientId} — update a patient information")
+    @Operation(summary = "PUT /api/patients/{patientId} — update a patient by id")
     public ResponseEntity<PatientResponse> updatePatientById(@PathVariable Long patientId, @Valid @RequestBody PatientRequest request) {
         return ResponseEntity.ok(patientService.updatePatientById(patientId, request));
     }
@@ -58,7 +56,7 @@ public class PatientController {
 
     @DeleteMapping("/{patientId}")
     @PreAuthorize("hasAnyRole('DOCTOR', 'RECEPTIONIST')")
-    @Operation(summary = "DELETE /api/patients/{patientId} — deactivate a patient (soft-deleteScheduleById) a patient account")
+    @Operation(summary = "DELETE /api/patients/{patientId} — deactivate a patient by id")
     public ResponseEntity<Void> deactivatePatientById(@PathVariable Long patientId) {
         patientService.deactivatePatientById(patientId);
         return ResponseEntity.noContent().build();

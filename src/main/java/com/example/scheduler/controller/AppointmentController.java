@@ -44,8 +44,8 @@ public class AppointmentController {
     @Operation(summary = "POST /api/appointments — book an appointment for a patient on a given schedule slot")
     public ResponseEntity<AppointmentResponse> bookAppointment(@Valid @RequestBody AppointmentRequest request, Authentication auth) {
         if(SecurityUtils.extractRole(auth).equals(ERole.PATIENT.name())){
-            Patient patient = patientService.findByAccountId(Long.parseLong(auth.getName()));
-            return ResponseEntity.status(HttpStatus.CREATED).body(appointmentService.bookAppointment(request, patient.getId()));
+            Long patientId = patientService.findIdByAccountId(Long.parseLong(auth.getName()));
+            return ResponseEntity.status(HttpStatus.CREATED).body(appointmentService.bookAppointment(request, patientId));
         }
         return ResponseEntity.status(HttpStatus.CREATED).body(appointmentService.bookAppointment(request));
     }
@@ -67,12 +67,12 @@ public class AppointmentController {
     ) {
         String role = SecurityUtils.extractRole(auth);
         if (role.equals(ERole.DOCTOR.name())){
-            Personal personal = personalService.findByAccountId(Long.parseLong(auth.getName()));
-            return ResponseEntity.ok(appointmentService.findAllAppointments(personal.getId(), patientId, status, pageable));
+            doctorId = personalService.findIdByAccountId(Long.parseLong(auth.getName()));
+            return ResponseEntity.ok(appointmentService.findAllAppointments(doctorId, patientId, status, pageable));
         }
         if (role.equals(ERole.PATIENT.name())){
-            Patient patient = patientService.findByAccountId(Long.parseLong(auth.getName()));
-            return ResponseEntity.ok(appointmentService.findAllAppointments(doctorId, patient.getId(), status, pageable));
+            patientId = patientService.findIdByAccountId(Long.parseLong(auth.getName()));
+            return ResponseEntity.ok(appointmentService.findAllAppointments(doctorId, patientId, status, pageable));
         }
         return ResponseEntity.ok(appointmentService.findAllAppointments(doctorId, patientId, status, pageable));
     }
@@ -108,12 +108,12 @@ public class AppointmentController {
             Authentication auth) {
         String role = SecurityUtils.extractRole(auth);
         if (role.equals(ERole.DOCTOR.name())){
-            Personal personal = personalService.findByAccountId(Long.parseLong(auth.getName()));
-            return ResponseEntity.ok(appointmentService.getBoardByRange(from, to, personal.getId(), patientId, Long.parseLong(auth.getName()), SecurityUtils.extractRole(auth)));
+            doctorId = personalService.findIdByAccountId(Long.parseLong(auth.getName()));
+            return ResponseEntity.ok(appointmentService.getBoardByRange(from, to, doctorId, patientId, Long.parseLong(auth.getName()), SecurityUtils.extractRole(auth)));
         }
         if (role.equals(ERole.PATIENT.name())){
-            Patient patient = patientService.findByAccountId(Long.parseLong(auth.getName()));
-            return ResponseEntity.ok(appointmentService.getBoardByRange(from, to, doctorId, patient.getId(), Long.parseLong(auth.getName()), SecurityUtils.extractRole(auth)));
+            patientId = patientService.findIdByAccountId(Long.parseLong(auth.getName()));
+            return ResponseEntity.ok(appointmentService.getBoardByRange(from, to, doctorId, patientId, Long.parseLong(auth.getName()), SecurityUtils.extractRole(auth)));
         }
         return ResponseEntity.ok(appointmentService.getBoardByRange(from, to, doctorId, patientId, Long.parseLong(auth.getName()), SecurityUtils.extractRole(auth)));
     }
@@ -128,12 +128,12 @@ public class AppointmentController {
             Authentication auth) {
         String role = SecurityUtils.extractRole(auth);
         if (role.equals(ERole.DOCTOR.name())){
-            Personal personal = personalService.findByAccountId(Long.parseLong(auth.getName()));
-            return ResponseEntity.ok(appointmentService.getCalendar(month, year, personal.getId(), patientId, Long.parseLong(auth.getName()), SecurityUtils.extractRole(auth)));
+            doctorId = personalService.findIdByAccountId(Long.parseLong(auth.getName()));
+            return ResponseEntity.ok(appointmentService.getCalendar(month, year, doctorId, patientId, Long.parseLong(auth.getName()), SecurityUtils.extractRole(auth)));
         }
         if (role.equals(ERole.PATIENT.name())){
-            Patient patient = patientService.findByAccountId(Long.parseLong(auth.getName()));
-            return ResponseEntity.ok(appointmentService.getCalendar(month, year, doctorId, patient.getId(), Long.parseLong(auth.getName()), SecurityUtils.extractRole(auth)));
+            patientId = patientService.findIdByAccountId(Long.parseLong(auth.getName()));
+            return ResponseEntity.ok(appointmentService.getCalendar(month, year, doctorId, patientId, Long.parseLong(auth.getName()), SecurityUtils.extractRole(auth)));
         }
         return ResponseEntity.ok(appointmentService.getCalendar(month, year, doctorId, patientId, Long.parseLong(auth.getName()), SecurityUtils.extractRole(auth)));
     }
