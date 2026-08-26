@@ -115,37 +115,37 @@ public class PersonalServiceImpl implements PersonalService {
 
     private Personal getPersonalOrThrowById(Long personalId) {
         return personalRepository.findById(personalId)
-                .orElseThrow(() -> new ResourceNotFoundException("No se encontro el personal con el id: " + personalId));
+                .orElseThrow(() -> new ResourceNotFoundException("Personal not fount with id: " + personalId));
     }
 
     private Personal getPersonalOrThrowByAccountId(Long accountId) {
         return personalRepository.findByAccountId(accountId)
-                .orElseThrow(() -> new ResourceNotFoundException("No se encontro el personal con el id: " + accountId));
+                .orElseThrow(() -> new ResourceNotFoundException("Personal not found with accountId: " + accountId));
     }
 
     private Long getPersonalIdOrThrowByAccountId(Long accountId) {
         return personalRepository.findIdByAccountId(accountId)
-                .orElseThrow(() -> new ResourceNotFoundException("No se encontro el personal con el id: " + accountId));
+                .orElseThrow(() -> new ResourceNotFoundException("Personal not found with accountId: " + accountId));
     }
 
     private void getSpecialtyOrThrowById(Long specialtyId) {
         specialtyRepository.findById(specialtyId)
-                .orElseThrow(() -> new ResourceNotFoundException("No se encontro la especialidad con el specialtyId: " + specialtyId));
+                .orElseThrow(() -> new ResourceNotFoundException("Specialty not found with id: " + specialtyId));
     }
 
     private void getRoleOrThrowById(Long roleId) {
         roleRepository.findById(roleId)
-                .orElseThrow(() -> new ResourceNotFoundException("No se encontro el role con el roleId " + roleId));
+                .orElseThrow(() -> new ResourceNotFoundException("Role not found with id: " + roleId));
     }
 
     private Patient getPatientOrThrowById(Long patientId) {
         return patientRepository.findById(patientId)
-                .orElseThrow(() -> new ResourceNotFoundException("No se encontro el paciente con el patientId: " + patientId));
+                .orElseThrow(() -> new ResourceNotFoundException("Patient not found with id: " + patientId));
     }
 
     public void verifyDoctorPermission(String role, Long accountId, Long userId) {
 
         if (role.equals(ERole.DOCTOR.name()) && !accountId.equals(userId))
-            throw new ForbiddenException("Este usuario no tiene permitido usar este recurso");
+            throw new ForbiddenException("Not authorize to do this");
     }
 }

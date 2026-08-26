@@ -24,6 +24,4 @@ public interface AppointmentRepository extends JpaRepository<Appointment, Long> 
             "a.schedule.startTime >= :from AND a.schedule.startTime < :to " +
             "ORDER BY a.schedule.startTime ASC")
     List<Appointment> findByFiltersAndDateRange(@Param("doctorId") Long doctorId, @Param("patientId") Long patientId, @Param("from") LocalDateTime from, @Param("to") LocalDateTime to);
-    Optional<Appointment> findByIdAndScheduleDoctorAccountId(Long id, Long accountId);
-    Optional<Appointment> findByIdAndPatientAccountId(Long id, Long accountId);
 }
