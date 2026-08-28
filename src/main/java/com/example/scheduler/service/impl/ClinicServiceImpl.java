@@ -8,7 +8,6 @@ import com.example.scheduler.entity.Clinic;
 import com.example.scheduler.entity.Personal;
 import com.example.scheduler.entity.Role;
 import com.example.scheduler.enums.ERole;
-import com.example.scheduler.exception.ResourceNotFoundException;
 import com.example.scheduler.mapper.ClinicMapper;
 import com.example.scheduler.repository.AccountRepository;
 import com.example.scheduler.repository.ClinicRepository;
@@ -47,10 +46,10 @@ public class ClinicServiceImpl implements ClinicService {
                     .orElseGet(() -> accountRepository.save(Account.builder()
                             .name(request.getName())
                             .email(request.getAdminEmail())
-                            .role(role)
+                            .ci(request.getCi())
                             .password(passwordEncoder.encode(request.getAdminPassword()))
                             .build()));
-            Personal personal = Personal.builder().account(account).build();
+            Personal personal = Personal.builder().account(account).role(role).build();
             personalRepository.save(personal);
         } finally {
             TenantContext.clear();
@@ -64,31 +63,12 @@ public class ClinicServiceImpl implements ClinicService {
     }
 
     @Override
-    public List<ClinicResponse> findClinicsByPatientAccountId(Long accountId) {
-        getAccountOrThrow(accountId);
-        return findByClinicIds(patientRepository.findClinicIdsByAccountId(accountId));
-    }
-
-    @Override
-    public List<ClinicResponse> findClinicsByPersonalAccountId(Long accountId) {
-        getAccountOrThrow(accountId);
-        return findByClinicIds(personalRepository.findClinicIdsByAccountId(accountId));
-    }
-
-    @Override
     public List<ClinicResponse> findClinicsByPatientPhoneNumber(String phoneNumber) {
-        Account account = accountRepository.findByPhoneNumber(phoneNumber)
-                .orElseThrow(() -> new ResourceNotFoundException("Cuenta no encontrada con el numero: " + phoneNumber));
-        return findClinicsByPatientAccountId(account.getId());
+        return findByClinicIds(patientRepository.findClinicIdsByPhoneNumber(phoneNumber));
     }
 
     private List<ClinicResponse> findByClinicIds(List<String> clinicIds) {
         List<Long> ids = clinicIds.stream().map(Long::valueOf).toList();
         return clinicMapper.toResponseList(clinicRepository.findAllById(ids));
-    }
-
-    private void getAccountOrThrow(Long id) {
-        accountRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Cuenta no encontrada con el id: " + id));
     }
 }

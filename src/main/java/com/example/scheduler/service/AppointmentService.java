@@ -15,11 +15,11 @@ import java.util.Map;
 public interface AppointmentService {
     AppointmentResponse bookAppointment(AppointmentRequest request, Long patientId);
     AppointmentResponse bookAppointment(AppointmentRequest request);
-    AppointmentResponse findAppointmentById(Long appointmentId, Long accountId, String role);
+    AppointmentResponse findAppointmentById(Long appointmentId, Long userId, String role);
     Page<AppointmentResponse> findAllAppointments(Long doctorId, Long patientId, AppointmentStatus status, Pageable pageable);
-    AppointmentResponse confirmAppointmentById(Long AppointmentId, Long accountId, String role);
-    AppointmentResponse cancelAppointmentById(Long AppointmentId, Long accountId, String role);
-    AppointmentResponse rescheduleAppointmentById(Long AppointmentId, RescheduleRequest request, Long accountId, String role);
-    Map<AppointmentStatus, List<AppointmentSummaryItem>> getBoardByRange(LocalDate from, LocalDate to, Long doctorId, Long patientId, Long userId, String role);
-    Map<String, List<AppointmentSummaryItem>> getCalendar(int month, int year, Long doctorId, Long patientId, Long userId, String role);
+    AppointmentResponse confirmAppointmentById(Long AppointmentId, Long userId, String role);
+    AppointmentResponse cancelAppointmentById(Long AppointmentId, Long userId, String role);
+    AppointmentResponse rescheduleAppointmentById(Long AppointmentId, RescheduleRequest request, Long userId, String role);
+    Map<AppointmentStatus, List<AppointmentSummaryItem>> getBoardByRange(LocalDate from, LocalDate to, Long doctorId, Long patientId);
+    Map<String, List<AppointmentSummaryItem>> getCalendar(int month, int year, Long doctorId, Long patientId);
 }

@@ -16,6 +16,9 @@ public class Account {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Column(nullable = false, unique = true)
+    private String ci;
+
     @Column(nullable = false)
     private String name;
 
@@ -27,8 +30,4 @@ public class Account {
 
     @Column(unique = true)
     private String phoneNumber;
-
-    @ManyToOne(optional = false)
-    @JoinColumn(name = "role_id")
-    private Role role;
 }

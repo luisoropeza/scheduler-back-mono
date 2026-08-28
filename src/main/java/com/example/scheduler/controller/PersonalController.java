@@ -4,7 +4,6 @@ import com.example.scheduler.dto.patient.PatientResponse;
 import com.example.scheduler.dto.personal.AssignAndRemoveRequest;
 import com.example.scheduler.dto.personal.PersonalRequest;
 import com.example.scheduler.dto.personal.PersonalResponse;
-import com.example.scheduler.entity.Personal;
 import com.example.scheduler.security.SecurityUtils;
 import com.example.scheduler.service.PersonalService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -70,7 +69,7 @@ public class PersonalController {
     @PreAuthorize("hasAnyRole('DOCTOR, RECEPTIONIST')")
     @Operation(summary = "PUT /api/personal — update self personal information")
     public ResponseEntity<PersonalResponse> updatePersonalProfile(@Valid @RequestBody PersonalRequest request, Authentication auth) {
-        return ResponseEntity.ok(personalService.updatePersonalByAccountId(Long.parseLong(auth.getName()), request));
+        return ResponseEntity.ok(personalService.updatePersonalById(Long.parseLong(auth.getName()), request));
     }
 
     @DeleteMapping("deactivate/{personalId}")

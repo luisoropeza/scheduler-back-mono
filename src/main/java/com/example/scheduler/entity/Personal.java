@@ -28,6 +28,10 @@ public class Personal {
     @JoinColumn(name = "specialty_id")
     private Specialty specialty;
 
+    @ManyToOne(optional = false)
+    @JoinColumn(name = "role_id")
+    private Role role;
+
     @TenantId
     @Column(name = "clinic_id", nullable = false, updatable = false)
     private String clinicId;

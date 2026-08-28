@@ -7,7 +7,6 @@ import com.example.scheduler.dto.patient.PatientResponse;
 import com.example.scheduler.dto.personal.PersonalResponse;
 import com.example.scheduler.dto.schedule.ScheduleResponse;
 import com.example.scheduler.dto.specialty.SpecialtyResponse;
-import com.example.scheduler.enums.ERole;
 import com.example.scheduler.enums.ScheduleStatus;
 import com.example.scheduler.middleware.ApiKeyAuthFilter;
 import com.example.scheduler.service.AppointmentService;

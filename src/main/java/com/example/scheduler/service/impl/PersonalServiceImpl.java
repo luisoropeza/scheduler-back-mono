@@ -64,13 +64,6 @@ public class PersonalServiceImpl implements PersonalService {
     }
 
     @Override
-    public PersonalResponse updatePersonalByAccountId(Long accountId, PersonalRequest request) {
-        Personal personal = getPersonalOrThrowByAccountId(accountId);
-        personalMapper.toEntityUpdated(request, personal);
-        return personalMapper.toResponse(personalRepository.save(personal));
-    }
-
-    @Override
     @Transactional
     public void deactivatePersonalById(Long personalId) {
         Personal personal = getPersonalOrThrowById(personalId);
@@ -80,10 +73,10 @@ public class PersonalServiceImpl implements PersonalService {
 
     @Override
     @Transactional
-    public void assignPatient(AssignAndRemoveRequest request, Long accountId, String role) {
+    public void assignPatient(AssignAndRemoveRequest request, Long userId, String role) {
         Personal doctor = getPersonalOrThrowById(request.getDoctorId());
         Patient patient = getPatientOrThrowById(request.getPatientId());
-        verifyDoctorPermission(role, doctor.getAccount().getId(), accountId);
+        verifyDoctorPermission(role, doctor.getId(), userId);
         if (!doctor.getPatients().contains(patient)) {
             doctor.getPatients().add(patient);
             personalRepository.save(doctor);
@@ -92,10 +85,10 @@ public class PersonalServiceImpl implements PersonalService {
 
     @Override
     @Transactional
-    public void removePatient(AssignAndRemoveRequest request, Long accountId, String role) {
+    public void removePatient(AssignAndRemoveRequest request, Long userId, String role) {
         Personal doctor = getPersonalOrThrowById(request.getDoctorId());
         Patient patient = getPatientOrThrowById(request.getPatientId());
-        verifyDoctorPermission(role, doctor.getAccount().getId(), accountId);
+        verifyDoctorPermission(role, doctor.getId(), userId);
         if (doctor.getPatients().contains(patient)) {
             doctor.getPatients().remove(patient);
             personalRepository.save(doctor);
@@ -109,23 +102,13 @@ public class PersonalServiceImpl implements PersonalService {
     }
 
     @Override
-    public Long findIdByAccountId(Long accountId) {
-        return getPersonalIdOrThrowByAccountId(accountId);
+    public PatientResponse findByAccountCi(String ci) {
+        return null;
     }
 
     private Personal getPersonalOrThrowById(Long personalId) {
         return personalRepository.findById(personalId)
                 .orElseThrow(() -> new ResourceNotFoundException("Personal not fount with id: " + personalId));
-    }
-
-    private Personal getPersonalOrThrowByAccountId(Long accountId) {
-        return personalRepository.findByAccountId(accountId)
-                .orElseThrow(() -> new ResourceNotFoundException("Personal not found with accountId: " + accountId));
-    }
-
-    private Long getPersonalIdOrThrowByAccountId(Long accountId) {
-        return personalRepository.findIdByAccountId(accountId)
-                .orElseThrow(() -> new ResourceNotFoundException("Personal not found with accountId: " + accountId));
     }
 
     private void getSpecialtyOrThrowById(Long specialtyId) {

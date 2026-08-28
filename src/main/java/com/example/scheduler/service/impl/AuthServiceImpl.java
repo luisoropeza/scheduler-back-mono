@@ -1,10 +1,13 @@
 package com.example.scheduler.service.impl;
 
+import com.example.scheduler.config.tenant.TenantContext;
 import com.example.scheduler.dto.login.LoginRequest;
 import com.example.scheduler.dto.login.LoginResponse;
-import com.example.scheduler.entity.Account;
+import com.example.scheduler.entity.Patient;
+import com.example.scheduler.entity.Personal;
 import com.example.scheduler.exception.UnauthorizedException;
-import com.example.scheduler.repository.AccountRepository;
+import com.example.scheduler.repository.PatientRepository;
+import com.example.scheduler.repository.PersonalRepository;
 import com.example.scheduler.security.JwtUtil;
 import com.example.scheduler.service.AuthService;
 import lombok.RequiredArgsConstructor;
@@ -14,17 +17,29 @@ import org.springframework.stereotype.Service;
 @Service
 @RequiredArgsConstructor
 public class AuthServiceImpl implements AuthService {
-    private final AccountRepository accountRepository;
+    private final PatientRepository patientRepository;
+    private final PersonalRepository personalRepository;
     private final BCryptPasswordEncoder passwordEncoder;
     private final JwtUtil jwtUtil;
 
     @Override
     public LoginResponse login(LoginRequest request) {
-        Account account = accountRepository.findByEmail(request.getEmail())
-                .orElseThrow(() -> new UnauthorizedException("Credenciales invalidas"));
-        if (!passwordEncoder.matches(request.getPassword(), account.getPassword())) {
-            throw new UnauthorizedException("Credenciales invalidas");
+        try {
+            TenantContext.setCurrentTenant(request.getClinicId().toString());
+            Personal personal = personalRepository.findByAccountEmail(request.getEmail()).orElse(null);
+            Patient patient = personal == null ? patientRepository.findByAccountEmail(request.getEmail()).orElse(null) : null;
+            if (personal == null && patient == null) {
+                throw new UnauthorizedException("Invalid Credentials");
+            }
+            var account = personal != null ? personal.getAccount() : patient.getAccount();
+            var id = personal != null ? personal.getId() : patient.getId();
+            var role = personal != null ? personal.getRole() : patient.getRole();
+            if (!passwordEncoder.matches(request.getPassword(), account.getPassword())) {
+                throw new UnauthorizedException("Invalid Credentials");
+            }
+            return new LoginResponse(jwtUtil.generate(id, role.getName().name()));
+        } finally {
+            TenantContext.clear();
         }
-        return new LoginResponse(jwtUtil.generate(account.getId(), account.getRole().getName().name()));
     }
 }

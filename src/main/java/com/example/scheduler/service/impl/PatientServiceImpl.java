@@ -50,13 +50,6 @@ public class PatientServiceImpl implements PatientService {
     }
 
     @Override
-    public PatientResponse updatePatientByAccountId(Long accountId, PatientRequest request) {
-        Patient patient = getPatientOrThrowByAccountId(accountId);
-        patientMapper.toEntityUpdated(request, patient);
-        return patientMapper.toResponse(patientRepository.save(patient));
-    }
-
-    @Override
     @Transactional
     public void deactivatePatientById(Long patientId) {
         Patient patient = getPatientOrThrowById(patientId);
@@ -70,23 +63,8 @@ public class PatientServiceImpl implements PatientService {
         return personalMapper.toResponseList(patient.getDoctors());
     }
 
-    @Override
-    public Long findIdByAccountId(Long accountId) {
-        return getPatientIdOrThrowByAccountId(accountId);
-    }
-
     private Patient getPatientOrThrowById(Long patientId) {
         return patientRepository.findById(patientId)
                 .orElseThrow(() -> new ResourceNotFoundException("Patient not found with id: " + patientId));
-    }
-
-    private Patient getPatientOrThrowByAccountId(Long accountId) {
-        return patientRepository.findByAccountId(accountId)
-                .orElseThrow(() -> new ResourceNotFoundException("Patient not found with accountId: " + accountId));
-    }
-
-    private Long getPatientIdOrThrowByAccountId(Long accountId) {
-        return patientRepository.findIdByAccountId(accountId)
-                .orElseThrow(() -> new ResourceNotFoundException("Patient not found with accountId: " + accountId));
     }
 }

@@ -51,7 +51,7 @@ public class PatientController {
     @PreAuthorize("hasAnyRole('PATIENT')")
     @Operation(summary = "PUT /api/patients/{id} — update self patient information")
     public ResponseEntity<PatientResponse> updatePatientProfile(@Valid @RequestBody PatientRequest request, Authentication auth) {
-        return ResponseEntity.ok(patientService.updatePatientByAccountId(Long.parseLong(auth.getName()), request));
+        return ResponseEntity.ok(patientService.updatePatientById(Long.parseLong(auth.getName()), request));
     }
 
     @DeleteMapping("/{patientId}")

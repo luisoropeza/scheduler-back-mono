@@ -10,7 +10,7 @@ import java.util.List;
 @Mapper(componentModel = "spring")
 public interface PersonalMapper {
     @Mapping(target = "specialtyName", source = "specialty.name")
-    @Mapping(target = "roleName", source = "account.role.name")
+    @Mapping(target = "roleName", source = "role.name")
     @Mapping(target = "name", source = "account.name")
     @Mapping(target = "email", source = "account.email")
     PersonalResponse toResponse(Personal personal);

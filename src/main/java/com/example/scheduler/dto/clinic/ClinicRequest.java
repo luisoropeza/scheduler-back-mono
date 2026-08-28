@@ -20,4 +20,6 @@ public class ClinicRequest {
     @NotBlank
     @Size(min = 8)
     private String adminPassword;
+    @NotBlank
+    private String ci;
 }

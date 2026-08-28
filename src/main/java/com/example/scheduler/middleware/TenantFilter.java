@@ -48,13 +48,13 @@ public class TenantFilter extends OncePerRequestFilter {
             String tenantId = request.getHeader(TENANT_HEADER);
 
             if (tenantId == null || tenantId.isBlank()) {
-                throw new BadRequestException("El encabezado X-Tenant-ID es obligatorio.");
+                throw new BadRequestException("The X-Tenant-ID header is missing");
             }
 
             TenantContext.setCurrentTenant(tenantId);
 
             if (!belongsToTenant()) {
-                throw new BusinessException("El usuario no pertenece al tenant indicado.");
+                throw new BusinessException("That user is not allowed to access this tenant");
             }
 
             filterChain.doFilter(request, response);
@@ -75,8 +75,8 @@ public class TenantFilter extends OncePerRequestFilter {
 
         Long userId = Long.parseLong(auth.getName());
         return role.equals(ERole.PATIENT.name())
-                ? patientRepository.existsByAccountId(userId)
-                : personalRepository.existsByAccountId(userId);
+                ? patientRepository.existsById(userId)
+                : personalRepository.existsById(userId);
     }
 
     private boolean isExempt(String requestUri) {

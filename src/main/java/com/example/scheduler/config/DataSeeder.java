@@ -65,15 +65,15 @@ public class DataSeeder implements ApplicationRunner {
         Specialty dent = specialtyRepository.save(Specialty.builder().name("Dentistry").build());
         Specialty peds = specialtyRepository.save(Specialty.builder().name("Pediatrics").build());
 
-        personalRepository.save(Personal.builder().account(seedPersonalAccount("Downtown Admin", "admin.downtown@clinic.com", pwd, admin)).build());
+        personalRepository.save(Personal.builder().account(seedPersonalAccount("Downtown Admin", "admin.downtown@clinic.com", pwd, "123123121")).role(admin).build());
 
-        Personal ana = personalRepository.save(Personal.builder().account(seedPersonalAccount("Dr. Ana García", "ana.garcia@clinic.com", pwd, doctor)).specialty(gm).build());
-        Personal carlos = personalRepository.save(Personal.builder().account(seedPersonalAccount("Dr. Carlos Méndez", "carlos.mendez@clinic.com", pwd, doctor)).specialty(dent).build());
-        Personal laura = personalRepository.save(Personal.builder().account(seedPersonalAccount("Dr. Laura Torres", "laura.torres@clinic.com", pwd, doctor)).specialty(peds).build());
-        personalRepository.save(Personal.builder().account(seedPersonalAccount("Maria Ramos", "maria.ramos@clinic.com", pwd, receptionist)).build());
+        Personal ana = personalRepository.save(Personal.builder().account(seedPersonalAccount("Dr. Ana García", "ana.garcia@clinic.com", pwd, "123123122")).specialty(gm).role(doctor).build());
+        Personal carlos = personalRepository.save(Personal.builder().account(seedPersonalAccount("Dr. Carlos Méndez", "carlos.mendez@clinic.com", pwd, "123123123")).specialty(dent).role(doctor).build());
+        Personal laura = personalRepository.save(Personal.builder().account(seedPersonalAccount("Dr. Laura Torres", "laura.torres@clinic.com", pwd, "123123124")).specialty(peds).role(doctor).build());
+        personalRepository.save(Personal.builder().account(seedPersonalAccount("Maria Ramos", "maria.ramos@clinic.com", pwd, "123123125")).role(receptionist).build());
 
-        Patient john = patientRepository.save(Patient.builder().account(seedPatientAccount("John Smith", "john.smith@email.com", "+1-555-1001", pwd, patient)).build());
-        Patient maria = patientRepository.save(Patient.builder().account(seedPatientAccount("María López", "maria.lopez@email.com", "+1-555-1002", pwd, patient)).build());
+        Patient john = patientRepository.save(Patient.builder().account(seedPatientAccount("John Smith", "john.smith@email.com", "+1-555-1001", pwd, "123123126")).role(patient).build());
+        Patient maria = patientRepository.save(Patient.builder().account(seedPatientAccount("María López", "maria.lopez@email.com", "+1-555-1002", pwd, "123123127")).role(patient).build());
 
         ana.getPatients().add(john);
         ana.getPatients().add(maria);
@@ -87,14 +87,14 @@ public class DataSeeder implements ApplicationRunner {
         Specialty derma = specialtyRepository.save(Specialty.builder().name("Dermatology").build());
         Specialty trauma = specialtyRepository.save(Specialty.builder().name("Traumatology").build());
 
-        personalRepository.save(Personal.builder().account(seedPersonalAccount("Uptown Admin", "admin.uptown@clinic.com", pwd, admin)).build());
+        personalRepository.save(Personal.builder().account(seedPersonalAccount("Uptown Admin", "admin.uptown@clinic.com", pwd, "123123128")).role(admin).build());
 
-        Personal sofia = personalRepository.save(Personal.builder().account(seedPersonalAccount("Dr. Sofía Ramírez", "sofia.ramirez@clinic.com", pwd, doctor)).specialty(cardio).build());
-        Personal diego = personalRepository.save(Personal.builder().account(seedPersonalAccount("Dr. Diego Fernández", "diego.fernandez@clinic.com", pwd, doctor)).specialty(derma).build());
-        Personal valentina = personalRepository.save(Personal.builder().account(seedPersonalAccount("Dr. Valentina Cruz", "valentina.cruz@clinic.com", pwd, doctor)).specialty(trauma).build());
-        personalRepository.save(Personal.builder().account(seedPersonalAccount("Pedro Álvarez", "pedro.alvarez@clinic.com", pwd, receptionist)).build());
+        Personal sofia = personalRepository.save(Personal.builder().account(seedPersonalAccount("Dr. Sofía Ramírez", "sofia.ramirez@clinic.com", pwd, "123123129")).specialty(cardio).role(doctor).build());
+        Personal diego = personalRepository.save(Personal.builder().account(seedPersonalAccount("Dr. Diego Fernández", "diego.fernandez@clinic.com", pwd, "123123120")).specialty(derma).role(doctor).build());
+        Personal valentina = personalRepository.save(Personal.builder().account(seedPersonalAccount("Dr. Valentina Cruz", "valentina.cruz@clinic.com", pwd, "123123111")).specialty(trauma).role(doctor).build());
+        personalRepository.save(Personal.builder().account(seedPersonalAccount("Pedro Álvarez", "pedro.alvarez@clinic.com", pwd, "123123112")).role(receptionist).build());
 
-        Patient james = patientRepository.save(Patient.builder().account(seedPatientAccount("James Wilson", "james.wilson@email.com", "+1-555-1003", pwd, patient)).build());
+        Patient james = patientRepository.save(Patient.builder().account(seedPatientAccount("James Wilson", "james.wilson@email.com", "+1-555-1003", pwd, "123123113")).role(patient).build());
 
         sofia.getPatients().add(james);
         personalRepository.save(sofia);
@@ -102,12 +102,12 @@ public class DataSeeder implements ApplicationRunner {
         seedSchedules(sofia, diego, valentina);
     }
 
-    private Account seedPersonalAccount(String name, String email, String encodedPassword, Role role) {
-        return accountRepository.save(Account.builder().name(name).email(email).password(encodedPassword).role(role).build());
+    private Account seedPersonalAccount(String name, String email, String encodedPassword, String ci) {
+        return accountRepository.save(Account.builder().name(name).email(email).password(encodedPassword).ci(ci).build());
     }
 
-    private Account seedPatientAccount(String name, String email, String phoneNumber, String encodedPassword, Role role) {
-        return accountRepository.save(Account.builder().name(name).email(email).phoneNumber(phoneNumber).password(encodedPassword).role(role).build());
+    private Account seedPatientAccount(String name, String email, String phoneNumber, String encodedPassword, String ci) {
+        return accountRepository.save(Account.builder().name(name).email(email).phoneNumber(phoneNumber).password(encodedPassword).ci(ci).build());
     }
 
     private void seedSchedules(Personal... doctors) {

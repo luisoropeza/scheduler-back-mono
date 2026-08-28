@@ -11,6 +11,5 @@ import java.util.List;
 public interface RoleMapper {
     @Mapping(target = "name", expression = "java(role.getName().getDisplayName())")
     RoleResponse toResponse(Role role);
-
     List<RoleResponse> toResponseList(List<Role> roles);
 }

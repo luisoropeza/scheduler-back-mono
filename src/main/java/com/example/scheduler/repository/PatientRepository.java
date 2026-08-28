@@ -10,11 +10,12 @@ import java.util.List;
 import java.util.Optional;
 
 public interface PatientRepository extends JpaRepository<Patient, Long> {
-    @Query(value = "SELECT DISTINCT clinic_id FROM patients WHERE patient_account_id = :accountId", nativeQuery = true)
-    List<String> findClinicIdsByAccountId(@Param("accountId") Long accountId);
-    Optional<Patient> findByAccountId(Long accountId);
+    @Query(value = "SELECT DISTINCT p.clinic_id " +
+            "FROM patients p " +
+            "INNER JOIN accounts a ON p.patient_account_id = a.id " +
+            "WHERE a.phone_number = :phoneNumber",
+            nativeQuery = true)
+    List<String> findClinicIdsByPhoneNumber(@Param("phoneNumber") String phoneNumber);
     Optional<Patient> findByAccountPhoneNumber(String phoneNumber);
-    @Query("SELECT p.id FROM Patient p WHERE p.account.id = :accountId")
-    Optional<Long> findIdByAccountId(@Param("accountId") Long accountId);
-    boolean existsByAccountId(Long accountId);
+    Optional<Patient> findByAccountEmail(String accountEmail);
 }

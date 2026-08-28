@@ -35,4 +35,8 @@ public class Patient {
     @ManyToMany(mappedBy = "patients")
     @Builder.Default
     private List<Personal> doctors = new ArrayList<>();
+
+    @ManyToOne(optional = false)
+    @JoinColumn(name = "role_id")
+    private Role role;
 }
