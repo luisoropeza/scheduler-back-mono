@@ -17,6 +17,7 @@ import org.springframework.stereotype.Service;
 @Service
 @RequiredArgsConstructor
 public class AuthServiceImpl implements AuthService {
+
     private final PatientRepository patientRepository;
     private final PersonalRepository personalRepository;
     private final BCryptPasswordEncoder passwordEncoder;
@@ -24,20 +25,28 @@ public class AuthServiceImpl implements AuthService {
 
     @Override
     public LoginResponse login(LoginRequest request) {
+        String schemaName = "clinic_" + request.getClinicId();
         try {
-            TenantContext.setCurrentTenant(request.getClinicId().toString());
+            TenantContext.setCurrentTenant(schemaName);
+
             Personal personal = personalRepository.findByAccountEmail(request.getEmail()).orElse(null);
-            Patient patient = personal == null ? patientRepository.findByAccountEmail(request.getEmail()).orElse(null) : null;
+            Patient patient = personal == null
+                    ? patientRepository.findByAccountEmail(request.getEmail()).orElse(null)
+                    : null;
+
             if (personal == null && patient == null) {
                 throw new UnauthorizedException("Invalid Credentials");
             }
+
             var account = personal != null ? personal.getAccount() : patient.getAccount();
             var id = personal != null ? personal.getId() : patient.getId();
             var role = personal != null ? personal.getRole() : patient.getRole();
+
             if (!passwordEncoder.matches(request.getPassword(), account.getPassword())) {
                 throw new UnauthorizedException("Invalid Credentials");
             }
-            return new LoginResponse(jwtUtil.generate(id, role.getName().name()));
+
+            return new LoginResponse(jwtUtil.generate(id, role.getName().name(), request.getClinicId()));
         } finally {
             TenantContext.clear();
         }

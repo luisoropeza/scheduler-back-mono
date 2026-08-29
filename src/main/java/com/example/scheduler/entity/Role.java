@@ -11,7 +11,7 @@ import lombok.*;
 @Builder
 @EqualsAndHashCode(of = "id")
 @Entity
-@Table(name = "roles")
+@Table(name = "roles", schema = "public")
 public class Role {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

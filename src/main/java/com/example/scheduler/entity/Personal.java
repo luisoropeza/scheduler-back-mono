@@ -2,7 +2,6 @@ package com.example.scheduler.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
-import org.hibernate.annotations.TenantId;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -14,7 +13,7 @@ import java.util.List;
 @Builder
 @EqualsAndHashCode(of = "id")
 @Entity
-@Table(name = "personal", uniqueConstraints = @UniqueConstraint(columnNames = {"personal_account_id", "clinic_id"}))
+@Table(name = "personal", uniqueConstraints = @UniqueConstraint(columnNames = {"personal_account_id"}))
 public class Personal {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -31,10 +30,6 @@ public class Personal {
     @ManyToOne(optional = false)
     @JoinColumn(name = "role_id")
     private Role role;
-
-    @TenantId
-    @Column(name = "clinic_id", nullable = false, updatable = false)
-    private String clinicId;
 
     @Column(nullable = false)
     @Builder.Default

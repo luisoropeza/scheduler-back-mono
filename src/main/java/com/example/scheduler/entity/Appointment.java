@@ -3,7 +3,6 @@ package com.example.scheduler.entity;
 import com.example.scheduler.enums.AppointmentStatus;
 import jakarta.persistence.*;
 import lombok.*;
-import org.hibernate.annotations.TenantId;
 
 import java.time.LocalDateTime;
 
@@ -19,10 +18,6 @@ public class Appointment {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-
-    @TenantId
-    @Column(name = "clinic_id", nullable = false, updatable = false)
-    private String clinicId;
 
     @ManyToOne(optional = false)
     @JoinColumn(name = "schedule_id")

@@ -2,7 +2,6 @@ package com.example.scheduler.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
-import org.hibernate.annotations.TenantId;
 
 @Getter
 @Setter
@@ -11,7 +10,7 @@ import org.hibernate.annotations.TenantId;
 @Builder
 @EqualsAndHashCode(of = "id")
 @Entity
-@Table(name = "specialties", uniqueConstraints = @UniqueConstraint(columnNames = {"name", "clinic_id"}))
+@Table(name = "specialties", uniqueConstraints = @UniqueConstraint(columnNames = {"name"}))
 public class Specialty {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -19,8 +18,4 @@ public class Specialty {
 
     @Column(nullable = false)
     private String name;
-
-    @TenantId
-    @Column(name = "clinic_id", nullable = false, updatable = false)
-    private String clinicId;
 }

@@ -50,9 +50,9 @@ public class IntegrationController {
     private final ClinicService clinicService;
 
     @GetMapping("/clinics")
-    @Operation(summary = "GET /api/integrations/n8n/clinics — list the clinics a patient (by ?phoneNumber={phoneNumber}) belongs to")
-    public ResponseEntity<List<ClinicResponse>> findClinicsByPatientPhoneNumber(@RequestParam String phoneNumber) {
-        return ResponseEntity.ok(clinicService.findClinicsByPatientPhoneNumber(phoneNumber));
+    @Operation(summary = "GET /api/integrations/n8n/clinics — list all registered clinics")
+    public ResponseEntity<List<ClinicResponse>> findAllClinics() {
+        return ResponseEntity.ok(clinicService.findAllClinics());
     }
 
     @GetMapping("/specialties")

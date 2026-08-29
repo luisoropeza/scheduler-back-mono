@@ -10,7 +10,7 @@ import lombok.*;
 @Builder
 @EqualsAndHashCode(of = "id")
 @Entity
-@Table(name = "clinics")
+@Table(name = "clinics", schema = "public")
 public class Clinic {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

@@ -18,7 +18,6 @@ public interface PatientMapper {
     @Mapping(target = "account.email", source = "email")
     @Mapping(target = "account.phoneNumber", source = "phoneNumber")
     @Mapping(target = "id", ignore = true)
-    @Mapping(target = "clinicId", ignore = true)
     @Mapping(target = "active", ignore = true)
     @Mapping(target = "doctors", ignore = true)
     void toEntityUpdated(PatientRequest request, @MappingTarget Patient patient);
