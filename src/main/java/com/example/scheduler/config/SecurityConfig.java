@@ -2,6 +2,7 @@ package com.example.scheduler.config;
 
 import com.example.scheduler.middleware.ApiKeyAuthFilter;
 import com.example.scheduler.middleware.JwtAuthFilter;
+import com.example.scheduler.middleware.TenantFilter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -23,24 +24,26 @@ public class SecurityConfig {
 
     private final JwtAuthFilter jwtAuthFilter;
     private final ApiKeyAuthFilter apiKeyAuthFilter;
+    private final TenantFilter tenantFilter;
 
     @Value("${security.public-paths:}")
-    private String publicPathsRaw;
+    private String[] publicPaths;
 
     @Bean
-    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+    public SecurityFilterChain filterChain(HttpSecurity http) {
         return http
                 .csrf(AbstractHttpConfigurer::disable)
                 .cors(Customizer.withDefaults())
                 .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(a -> {
-                    if (!publicPathsRaw.isBlank())
-                        a.requestMatchers(publicPathsRaw.split(",")).permitAll();
-                    a.requestMatchers("/swagger-ui/**", "/v3/api-docs/**").permitAll();
+                    a.requestMatchers("/api/clinics/mine").authenticated();
+                    if (publicPaths.length > 0)
+                        a.requestMatchers(publicPaths).permitAll();
                     a.anyRequest().authenticated();
                 })
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class)
                 .addFilterBefore(apiKeyAuthFilter, UsernamePasswordAuthenticationFilter.class)
+                .addFilterAfter(tenantFilter, jwtAuthFilter.getClass())
                 .httpBasic(AbstractHttpConfigurer::disable)
                 .formLogin(AbstractHttpConfigurer::disable)
                 .build();

@@ -15,10 +15,11 @@ public class JwtUtil {
     @Value("${jwt.secret}")
     private String secret;
 
-    public String generate(Long userId, String role) {
+    public String generate(Long userId, String role, Long clinicId) {
         return Jwts.builder()
                 .subject(userId.toString())
                 .claim("role", role)
+                .claim("clinicId", clinicId)
                 .issuedAt(new Date())
                 .expiration(new Date(System.currentTimeMillis() + 86_400_000L))
                 .signWith(key())
@@ -46,6 +47,19 @@ public class JwtUtil {
                     .parseSignedClaims(token)
                     .getPayload()
                     .get("role", String.class);
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+    public Long extractClinicId(String token) {
+        try {
+            return Jwts.parser()
+                    .verifyWith(key())
+                    .build()
+                    .parseSignedClaims(token)
+                    .getPayload()
+                    .get("clinicId", Long.class);
         } catch (Exception e) {
             return null;
         }

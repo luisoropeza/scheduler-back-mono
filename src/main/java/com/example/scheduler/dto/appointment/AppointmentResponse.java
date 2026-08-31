@@ -1,6 +1,5 @@
-package com.example.scheduler.dto;
+package com.example.scheduler.dto.appointment;
 
-import com.example.scheduler.enums.AppointmentStatus;
 import lombok.Data;
 
 import java.time.LocalDateTime;
@@ -25,6 +24,6 @@ public class AppointmentResponse {
     private String clientName;
     private String clientEmail;
 
-    private AppointmentStatus status;
+    private String status;
     private LocalDateTime createdAt;
 }

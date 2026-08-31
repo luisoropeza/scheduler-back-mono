@@ -1,9 +1,10 @@
 package com.example.scheduler.service.impl;
 
-import com.example.scheduler.dto.ScheduleRequest;
-import com.example.scheduler.dto.ScheduleResponse;
+import com.example.scheduler.dto.schedule.ScheduleRequest;
+import com.example.scheduler.dto.schedule.ScheduleResponse;
 import com.example.scheduler.entity.Personal;
 import com.example.scheduler.entity.Schedule;
+import com.example.scheduler.enums.ERole;
 import com.example.scheduler.enums.ScheduleStatus;
 import com.example.scheduler.exception.BusinessException;
 import com.example.scheduler.exception.ForbiddenException;
@@ -30,14 +31,14 @@ public class ScheduleServiceImpl implements ScheduleService {
     private final ScheduleMapper scheduleMapper;
 
     @Override
-    public Page<ScheduleResponse> findAll(
+    public Page<ScheduleResponse> findAllSchedules(
             Long doctorId,
             Long specialtyId,
             ScheduleStatus status,
             LocalDateTime after,
             Pageable pageable) {
         if (doctorId != null)
-            getActiveDoctorOrThrow(doctorId);
+            getActiveDoctorOrThrowById(doctorId);
         return scheduleRepository
                 .findAllByFilters(
                         doctorId,
@@ -49,52 +50,64 @@ public class ScheduleServiceImpl implements ScheduleService {
     }
 
     @Override
-    public ScheduleResponse findById(Long id) {
-        return scheduleMapper.toResponse(getScheduleOrThrow(id));
+    public ScheduleResponse findScheduleById(Long scheduleId, Long userId, String role) {
+        if(role.equals(ERole.DOCTOR.name())){
+            getActiveDoctorOrThrowById(userId);
+            Schedule schedule = getScheduleOrThrowById(scheduleId);
+            verifyDoctorPermission(schedule, userId);
+            return scheduleMapper.toResponse(schedule);
+        }
+        return scheduleMapper.toResponse(getScheduleOrThrowById(scheduleId));
     }
 
     @Override
     @Transactional
-    public ScheduleResponse create(Long doctorId, ScheduleRequest request) {
-        Personal doctor = getActiveDoctorOrThrow(doctorId);
+    public ScheduleResponse createSchedule(Long userId, ScheduleRequest request) {
+        Personal doctor = getActiveDoctorOrThrowById(userId);
         validateSlotTimes(request);
         return scheduleMapper.toResponse(scheduleRepository.save(buildSchedule(doctor, request)));
     }
 
     @Override
     @Transactional
-    public List<ScheduleResponse> createBatch(Long doctorId, List<ScheduleRequest> requests) {
-        Personal doctor = getActiveDoctorOrThrow(doctorId);
+    public List<ScheduleResponse> createSchedulesBatch(Long userId, List<ScheduleRequest> requests) {
+        Personal doctor = getActiveDoctorOrThrowById(userId);
         requests.forEach(this::validateSlotTimes);
         return scheduleMapper.toResponseList(scheduleRepository.saveAll(requests.stream().map(r -> buildSchedule(doctor, r)).toList()));
     }
 
     @Override
     @Transactional
-    public void delete(Long scheduleId, Long doctorId) {
-        Schedule schedule = getScheduleOrThrow(scheduleId);
-        if (!schedule.getDoctor().getId().equals(doctorId))
-            throw new ForbiddenException("Not authorized to delete this schedule slot");
+    public void deleteScheduleById(Long scheduleId, Long userId) {
+        getActiveDoctorOrThrowById(userId);
+        Schedule schedule = getScheduleOrThrowById(scheduleId);
+        verifyDoctorPermission(schedule, userId);
         if (schedule.getStatus() == ScheduleStatus.BOOKED)
-            throw new BusinessException("Cannot delete a booked schedule slot");
+            throw new BusinessException("Can't remove schedule already booked");
         scheduleRepository.delete(schedule);
     }
 
-    private Personal getActiveDoctorOrThrow(Long doctorId) {
-        Personal doctor = personalRepository.findById(doctorId)
-                .orElseThrow(() -> new ResourceNotFoundException("Personal not found with id: " + doctorId));
-        if (!doctor.isActive()) throw new BusinessException("Doctor is not active");
+    private Personal getActiveDoctorOrThrowById(Long personalId) {
+        Personal doctor = personalRepository.findById(personalId)
+                .orElseThrow(() -> new ResourceNotFoundException("Doctor not found with id: " + personalId));
+        if (!doctor.isActive()) throw new BusinessException("This doctor is not active");
         return doctor;
     }
 
-    private Schedule getScheduleOrThrow(Long id) {
-        return scheduleRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Schedule not found with id: " + id));
+    private Schedule getScheduleOrThrowById(Long scheduleId) {
+        return scheduleRepository.findById(scheduleId)
+                .orElseThrow(() -> new ResourceNotFoundException("Schedule not found with id: " + scheduleId));
+    }
+
+    private void verifyDoctorPermission(Schedule schedule, Long personalId) {
+        if(!schedule.getDoctor().getAccount().getId().equals(personalId)){
+            throw new ForbiddenException("Can't remove a schedule that doesn't belong to you.");
+        }
     }
 
     private void validateSlotTimes(ScheduleRequest request) {
         if (!request.getEndTime().isAfter(request.getStartTime()))
-            throw new BusinessException("End time must be after start time");
+            throw new BusinessException("The end time must be after the start time");
     }
 
     private Schedule buildSchedule(Personal doctor, ScheduleRequest request) {

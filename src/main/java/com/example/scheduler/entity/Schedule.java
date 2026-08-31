@@ -25,8 +25,10 @@ public class Schedule {
 
     @Column(nullable = false)
     private LocalDateTime startTime;
+
     @Column(nullable = false)
     private LocalDateTime endTime;
+
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     @Builder.Default

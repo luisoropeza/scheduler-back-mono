@@ -31,6 +31,7 @@ public class Appointment {
     @Column(nullable = false)
     @Builder.Default
     private AppointmentStatus status = AppointmentStatus.PENDING;
+
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;
 

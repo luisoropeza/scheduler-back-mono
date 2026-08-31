@@ -1,4 +1,4 @@
-package com.example.scheduler.dto;
+package com.example.scheduler.dto.personal;
 
 import jakarta.validation.constraints.NotBlank;
 import lombok.Data;
@@ -8,6 +8,5 @@ public class PersonalRequest {
     @NotBlank
     private String name;
     private String email;
-    private Long roleId;
     private Long specialtyId;
 }
