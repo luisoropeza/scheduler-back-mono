@@ -41,18 +41,9 @@ public class ClinicServiceImpl implements ClinicService {
     @Override
     public ClinicCreatedResponse createClinic(ClinicRequest request) {
         TransactionTemplate tx = new TransactionTemplate(transactionManager);
-
-        // Tx 1: persist clinic in public schema
         Clinic clinic = tx.execute(_ -> clinicRepository.save(clinicMapper.toEntity(request)));
-
-        // DDL: create schema + tenant tables (autocommit, outside any tx)
         String schemaName = "clinic_" + clinic.getId();
         schemaProvisioningService.createTenantSchema(schemaName);
-
-        // Tx 2: create admin account (public) + admin personal (tenant schema).
-        // The tenant must be set BEFORE the transaction opens: Hibernate resolves the
-        // session's tenant identifier when the session starts, so setting it inside the
-        // lambda binds the session to "public" and writes into the wrong schema.
         try {
             TenantContext.setCurrentTenant(schemaName);
             return tx.execute(_ -> {

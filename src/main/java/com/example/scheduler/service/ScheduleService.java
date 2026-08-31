@@ -3,9 +3,16 @@ package com.example.scheduler.service;
 import com.example.scheduler.dto.schedule.ScheduleRequest;
 import com.example.scheduler.dto.schedule.ScheduleResponse;
 import com.example.scheduler.enums.ScheduleStatus;
+import jakarta.annotation.PostConstruct;
+import org.springframework.core.io.ClassPathResource;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.util.StreamUtils;
 
+import javax.sql.DataSource;
+import java.sql.Connection;
+import java.sql.SQLException;
+import java.sql.Statement;
 import java.time.LocalDateTime;
 import java.util.List;
 

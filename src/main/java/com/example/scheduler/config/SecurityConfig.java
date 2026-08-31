@@ -36,7 +36,6 @@ public class SecurityConfig {
                 .cors(Customizer.withDefaults())
                 .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(a -> {
-                    a.requestMatchers("/api/clinics/mine").authenticated();
                     if (publicPaths.length > 0)
                         a.requestMatchers(publicPaths).permitAll();
                     a.anyRequest().authenticated();
