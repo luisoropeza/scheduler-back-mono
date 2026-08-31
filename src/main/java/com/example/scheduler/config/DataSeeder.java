@@ -5,6 +5,7 @@ import com.example.scheduler.entity.*;
 import com.example.scheduler.enums.ERole;
 import com.example.scheduler.enums.ScheduleStatus;
 import com.example.scheduler.repository.*;
+import com.example.scheduler.service.SchemaProvisioningService;
 import lombok.RequiredArgsConstructor;
 import org.jspecify.annotations.NonNull;
 import org.springframework.boot.ApplicationArguments;
@@ -19,6 +20,7 @@ import java.time.LocalDateTime;
 @Component
 @RequiredArgsConstructor
 public class DataSeeder implements ApplicationRunner {
+
     private final ClinicRepository clinicRepository;
     private final SpecialtyRepository specialtyRepository;
     private final RoleRepository roleRepository;
@@ -28,6 +30,7 @@ public class DataSeeder implements ApplicationRunner {
     private final ScheduleRepository scheduleRepository;
     private final BCryptPasswordEncoder passwordEncoder;
     private final PlatformTransactionManager transactionManager;
+    private final SchemaProvisioningService schemaProvisioningService;
 
     private static final int[] SLOT_HOURS = {9, 10, 11, 14, 15};
 
@@ -45,15 +48,20 @@ public class DataSeeder implements ApplicationRunner {
         Role receptionist = roleRepository.save(Role.builder().name(ERole.RECEPTIONIST).build());
         Role patient = roleRepository.save(Role.builder().name(ERole.PATIENT).build());
 
+        schemaProvisioningService.createTenantSchema("clinic_" + downtown.getId());
+        schemaProvisioningService.createTenantSchema("clinic_" + uptown.getId());
+
         TransactionTemplate transactionTemplate = new TransactionTemplate(transactionManager);
+
         try {
-            TenantContext.setCurrentTenant(downtown.getId().toString());
+            TenantContext.setCurrentTenant("clinic_" + downtown.getId());
             transactionTemplate.executeWithoutResult(_ -> seedDowntown(admin, doctor, receptionist, patient, pwd));
         } finally {
             TenantContext.clear();
         }
+
         try {
-            TenantContext.setCurrentTenant(uptown.getId().toString());
+            TenantContext.setCurrentTenant("clinic_" + uptown.getId());
             transactionTemplate.executeWithoutResult(_ -> seedUptown(admin, doctor, receptionist, patient, pwd));
         } finally {
             TenantContext.clear();

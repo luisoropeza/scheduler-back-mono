@@ -8,13 +8,17 @@ spring:
     driver-class-name: org.postgresql.Driver
   jpa:
     hibernate:
-      ddl-auto: update
-      tenant_identifier_resolver: com.example.scheduler.config.tenant.CustomTenantResolver
+      ddl-auto: none
+    # Must stay false: with schema-per-tenant, OSIV opens the EntityManager (and
+    # binds it to tenant "public") before TenantFilter/AuthServiceImpl set TenantContext,
+    # so every tenant-scoped query would silently hit the empty public tables.
+    open-in-view: false
     show-sql: true
     properties:
       hibernate:
         dialect: org.hibernate.dialect.PostgreSQLDialect
         format_sql: true
+        multiTenancy: SCHEMA
   mail:
     host: ${MAIL_HOST:smtp.gmail.com}
     port: ${MAIL_PORT:587}
@@ -27,9 +31,11 @@ spring:
           starttls:
             enable: true
             required: true
+
 logging:
   level:
     org.hibernate.orm.jdbc.bind: TRACE
+
 server:
   port: ${PORT:8080}
 
@@ -40,8 +46,8 @@ jwt:
   secret: ${JWT_SECRET:change-me-in-production-minimum-32-chars!}
 
 security:
-  public-paths: /api/auth/login, /api/clinics, /swagger-ui/**, /v3/api-docs/**
-  tenant-exempt-paths: /api/auth/login, /api/clinics, /swagger-ui/**, /v3/api-docs/**
+  public-paths: /api/auth/login, /api/clinics, /api/clinics/**, /swagger-ui/**, /v3/api-docs/**
+  tenant-exempt-paths: /api/auth/login, /api/clinics, /api/clinics/**, /swagger-ui/**, /v3/api-docs/**
 
 n8n:
   api-key: ${N8N_API_KEY:change-me-n8n-key}

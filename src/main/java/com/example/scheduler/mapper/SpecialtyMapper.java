@@ -13,6 +13,5 @@ public interface SpecialtyMapper {
     List<SpecialtyResponse> toResponseList(List<Specialty> specialties);
     SpecialtyResponse toResponse(Specialty specialty);
     @Mapping(target = "id", ignore = true)
-    @Mapping(target = "clinicId", ignore = true)
     Specialty toEntity(SpecialtyRequest request);
 }

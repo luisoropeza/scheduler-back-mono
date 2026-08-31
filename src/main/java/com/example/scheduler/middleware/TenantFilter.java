@@ -27,6 +27,7 @@ import java.util.Arrays;
 @Component
 @RequiredArgsConstructor
 public class TenantFilter extends OncePerRequestFilter {
+
     private static final String TENANT_HEADER = "X-Tenant-ID";
     private static final AntPathMatcher PATH_MATCHER = new AntPathMatcher();
 
@@ -38,20 +39,32 @@ public class TenantFilter extends OncePerRequestFilter {
     private String[] tenantExemptPaths;
 
     @Override
-    protected void doFilterInternal(@NonNull HttpServletRequest request, @NonNull HttpServletResponse response, @NonNull FilterChain filterChain)
+    protected void doFilterInternal(@NonNull HttpServletRequest request,
+                                    @NonNull HttpServletResponse response,
+                                    @NonNull FilterChain filterChain)
             throws ServletException, IOException {
+
         if (isExempt(request.getRequestURI())) {
             filterChain.doFilter(request, response);
             return;
         }
-        try {
-            String tenantId = request.getHeader(TENANT_HEADER);
 
-            if (tenantId == null || tenantId.isBlank()) {
+        try {
+            String tenantHeader = request.getHeader(TENANT_HEADER);
+
+            if (tenantHeader == null || tenantHeader.isBlank()) {
                 throw new BadRequestException("The X-Tenant-ID header is missing");
             }
 
-            TenantContext.setCurrentTenant(tenantId);
+            long clinicId;
+            try {
+                clinicId = Long.parseLong(tenantHeader.trim());
+            } catch (NumberFormatException e) {
+                throw new BadRequestException("The X-Tenant-ID header must be a numeric clinic ID");
+            }
+
+            String schemaName = "clinic_" + clinicId;
+            TenantContext.setCurrentTenant(schemaName);
 
             if (!belongsToTenant()) {
                 throw new BusinessException("That user is not allowed to access this tenant");
