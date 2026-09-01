@@ -19,7 +19,7 @@ public class Patient {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne(optional = false)
+    @ManyToOne(optional = false,  fetch = FetchType.LAZY)
     @JoinColumn(name = "patient_account_id")
     private Account account;
 
@@ -27,11 +27,11 @@ public class Patient {
     @Builder.Default
     private boolean active = true;
 
-    @ManyToMany(mappedBy = "patients")
+    @ManyToMany(mappedBy = "patients",  fetch = FetchType.LAZY)
     @Builder.Default
     private List<Personal> doctors = new ArrayList<>();
 
-    @ManyToOne(optional = false)
+    @ManyToOne(optional = false,  fetch = FetchType.LAZY)
     @JoinColumn(name = "role_id")
     private Role role;
 }

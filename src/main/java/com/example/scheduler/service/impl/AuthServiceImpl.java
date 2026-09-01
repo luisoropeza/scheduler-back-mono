@@ -46,7 +46,7 @@ public class AuthServiceImpl implements AuthService {
                 throw new UnauthorizedException("Invalid Credentials");
             }
 
-            return new LoginResponse(jwtUtil.generate(id, role.getName().name(), request.getClinicId()));
+            return new LoginResponse(jwtUtil.generate(id, role.getName().name(), request.getClinicId(), account.getName()));
         } finally {
             TenantContext.clear();
         }

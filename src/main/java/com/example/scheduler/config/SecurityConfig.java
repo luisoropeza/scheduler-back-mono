@@ -2,7 +2,6 @@ package com.example.scheduler.config;
 
 import com.example.scheduler.middleware.ApiKeyAuthFilter;
 import com.example.scheduler.middleware.JwtAuthFilter;
-import com.example.scheduler.middleware.TenantFilter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -24,7 +23,6 @@ public class SecurityConfig {
 
     private final JwtAuthFilter jwtAuthFilter;
     private final ApiKeyAuthFilter apiKeyAuthFilter;
-    private final TenantFilter tenantFilter;
 
     @Value("${security.public-paths:}")
     private String[] publicPaths;
@@ -42,7 +40,6 @@ public class SecurityConfig {
                 })
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class)
                 .addFilterBefore(apiKeyAuthFilter, UsernamePasswordAuthenticationFilter.class)
-                .addFilterAfter(tenantFilter, jwtAuthFilter.getClass())
                 .httpBasic(AbstractHttpConfigurer::disable)
                 .formLogin(AbstractHttpConfigurer::disable)
                 .build();

@@ -21,5 +21,9 @@ public interface PersonalRepository extends JpaRepository<Personal, Long> {
             "(:specialtyId IS NULL OR p.specialty.id = :specialtyId) AND " +
             "(:isActive IS NULL OR p.active = :isActive)")
     Page<Personal> findAllByFilters(@Param("specialtyId") Long specialtyId, @Param("isActive") Boolean isActive, @Param("roleId") Long roleId, Pageable pageable);
-    Optional<Personal> findByAccountEmail(String accountEmail);
+    @Query("SELECT p FROM Personal p " +
+            "JOIN FETCH p.account a " +
+            "JOIN FETCH p.role r " +
+            "WHERE a.email = :email")
+    Optional<Personal> findByAccountEmail(@Param("email") String accountEmail);
 }

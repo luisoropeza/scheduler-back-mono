@@ -15,11 +15,12 @@ public class JwtUtil {
     @Value("${jwt.secret}")
     private String secret;
 
-    public String generate(Long userId, String role, Long clinicId) {
+    public String generate(Long userId, String role, Long clinicId, String userName) {
         return Jwts.builder()
                 .subject(userId.toString())
                 .claim("role", role)
                 .claim("clinicId", clinicId)
+                .claim("username", userName)
                 .issuedAt(new Date())
                 .expiration(new Date(System.currentTimeMillis() + 86_400_000L))
                 .signWith(key())

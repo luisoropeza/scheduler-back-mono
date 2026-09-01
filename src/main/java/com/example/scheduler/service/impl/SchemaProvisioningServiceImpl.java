@@ -23,8 +23,7 @@ public class SchemaProvisioningServiceImpl implements SchemaProvisioningService 
     private final DataSource dataSource;
 
     @PostConstruct
-    @Override
-    public void createPublicSchema() {
+    private void createPublicSchema() {
         try {
             executeDdl(loadDdl(PUBLIC_SCHEMA_DDL));
         } catch (SQLException | IOException e) {
