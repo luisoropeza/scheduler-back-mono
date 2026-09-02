@@ -1,8 +1,10 @@
 package com.example.scheduler.repository;
 
 import com.example.scheduler.entity.Personal;
+import org.jspecify.annotations.NullMarked;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -10,7 +12,6 @@ import org.springframework.data.repository.query.Param;
 import java.util.Optional;
 
 public interface PersonalRepository extends JpaRepository<Personal, Long> {
-
     @Query("SELECT p FROM Personal p WHERE " +
             "p.role.name = 'DOCTOR' AND " +
             "(:specialtyId IS NULL OR p.specialty.id = :specialtyId) AND " +
@@ -21,6 +22,9 @@ public interface PersonalRepository extends JpaRepository<Personal, Long> {
             "(:specialtyId IS NULL OR p.specialty.id = :specialtyId) AND " +
             "(:isActive IS NULL OR p.active = :isActive)")
     Page<Personal> findAllByFilters(@Param("specialtyId") Long specialtyId, @Param("isActive") Boolean isActive, @Param("roleId") Long roleId, Pageable pageable);
+    @NullMarked
+    @EntityGraph(attributePaths = {"specialty", "account", "role"})
+    Optional<Personal> findById(Long id);
     @Query("SELECT p FROM Personal p " +
             "JOIN FETCH p.account a " +
             "JOIN FETCH p.role r " +
