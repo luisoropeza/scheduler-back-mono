@@ -59,12 +59,17 @@ public class PatientServiceImpl implements PatientService {
 
     @Override
     public List<PersonalResponse> getDoctorsOfPatient(Long patientId) {
-        Patient patient = getPatientOrThrowById(patientId);
+        Patient patient = getPatientDoctorsOrThrowById(patientId);
         return personalMapper.toResponseList(patient.getDoctors());
     }
 
     private Patient getPatientOrThrowById(Long patientId) {
         return patientRepository.findById(patientId)
+                .orElseThrow(() -> new ResourceNotFoundException("Patient not found with id: " + patientId));
+    }
+
+    private Patient getPatientDoctorsOrThrowById(Long patientId) {
+        return patientRepository.findPatientDoctorsById(patientId)
                 .orElseThrow(() -> new ResourceNotFoundException("Patient not found with id: " + patientId));
     }
 }
