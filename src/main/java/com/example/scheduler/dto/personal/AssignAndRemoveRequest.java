@@ -1,12 +1,12 @@
 package com.example.scheduler.dto.personal;
 
-import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 
 @Data
 public class AssignAndRemoveRequest {
-    @NotBlank
+    @NotNull
     private Long patientId;
-    @NotBlank
+    @NotNull
     private Long doctorId;
 }

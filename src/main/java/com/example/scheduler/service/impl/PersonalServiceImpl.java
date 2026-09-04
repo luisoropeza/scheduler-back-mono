@@ -37,15 +37,18 @@ public class PersonalServiceImpl implements PersonalService {
 
     @Override
     public Page<PersonalResponse> findAllDoctors(Long specialtyId, Boolean isActive, Pageable pageable) {
-        getSpecialtyOrThrowById(specialtyId);
+        if(specialtyId != null)
+            getSpecialtyOrThrowById(specialtyId);
         return personalRepository.findAllDoctorsByFilters(specialtyId, isActive, pageable)
                 .map(personalMapper::toResponse);
     }
 
     @Override
     public Page<PersonalResponse> findAllPersonal(Long specialtyId, Boolean isActive, Long roleId, Pageable pageable) {
-        getSpecialtyOrThrowById(specialtyId);
-        getRoleOrThrowById(roleId);
+        if(specialtyId != null)
+            getSpecialtyOrThrowById(specialtyId);
+        if(roleId != null)
+            getRoleOrThrowById(roleId);
         return personalRepository.findAllByFilters(specialtyId, isActive, roleId, pageable)
                 .map(personalMapper::toResponse);
     }
@@ -74,7 +77,7 @@ public class PersonalServiceImpl implements PersonalService {
     @Override
     @Transactional
     public void assignPatient(AssignAndRemoveRequest request, Long userId, String role) {
-        Personal doctor = getPersonalOrThrowById(request.getDoctorId());
+        Personal doctor = getPersonalPatientsOrThrowById(request.getDoctorId());
         Patient patient = getPatientOrThrowById(request.getPatientId());
         verifyDoctorPermission(role, doctor.getId(), userId);
         if (!doctor.getPatients().contains(patient)) {
@@ -86,7 +89,7 @@ public class PersonalServiceImpl implements PersonalService {
     @Override
     @Transactional
     public void removePatient(AssignAndRemoveRequest request, Long userId, String role) {
-        Personal doctor = getPersonalOrThrowById(request.getDoctorId());
+        Personal doctor = getPersonalPatientsOrThrowById(request.getDoctorId());
         Patient patient = getPatientOrThrowById(request.getPatientId());
         verifyDoctorPermission(role, doctor.getId(), userId);
         if (doctor.getPatients().contains(patient)) {
@@ -97,7 +100,7 @@ public class PersonalServiceImpl implements PersonalService {
 
     @Override
     public List<PatientResponse> getPatientsOfDoctor(Long doctorId) {
-        Personal doctor = getPersonalOrThrowById(doctorId);
+        Personal doctor = getPersonalPatientsOrThrowById(doctorId);
         return patientMapper.toResponseList(doctor.getPatients());
     }
 
@@ -108,6 +111,11 @@ public class PersonalServiceImpl implements PersonalService {
 
     private Personal getPersonalOrThrowById(Long personalId) {
         return personalRepository.findById(personalId)
+                .orElseThrow(() -> new ResourceNotFoundException("Personal not fount with id: " + personalId));
+    }
+
+    private Personal getPersonalPatientsOrThrowById(Long personalId) {
+        return personalRepository.findDoctorPatientsById(personalId)
                 .orElseThrow(() -> new ResourceNotFoundException("Personal not fount with id: " + personalId));
     }
 

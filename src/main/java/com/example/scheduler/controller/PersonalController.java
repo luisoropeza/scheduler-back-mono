@@ -52,7 +52,7 @@ public class PersonalController {
     }
 
     @GetMapping("/{personalId}")
-    @PreAuthorize("hasAnyRole('RECEPTIONIST, ADMINISTRATOR')")
+    @PreAuthorize("hasAnyRole('RECEPTIONIST', 'ADMINISTRATOR')")
     @Operation(summary = "GET /api/personal/{personalId} — get a personal by id")
     public ResponseEntity<PersonalResponse> findPersonalById(@PathVariable Long personalId) {
         return ResponseEntity.ok(personalService.findPersonalById(personalId));
@@ -66,7 +66,7 @@ public class PersonalController {
     }
 
     @PutMapping("/update")
-    @PreAuthorize("hasAnyRole('DOCTOR, RECEPTIONIST')")
+    @PreAuthorize("hasAnyRole('DOCTOR', 'RECEPTIONIST')")
     @Operation(summary = "PUT /api/personal — update self personal information")
     public ResponseEntity<PersonalResponse> updatePersonalProfile(@Valid @RequestBody PersonalRequest request, Authentication auth) {
         return ResponseEntity.ok(personalService.updatePersonalById(Long.parseLong(auth.getName()), request));
@@ -81,17 +81,17 @@ public class PersonalController {
     }
 
     @PostMapping("/patients/assign")
-    @PreAuthorize("hasAnyRole('DOCTOR, RECEPTIONIST')")
+    @PreAuthorize("hasAnyRole('DOCTOR', 'RECEPTIONIST')")
     @Operation(summary = "POST /api/personal/patients/assign — assign a patient to a doctor")
-    public ResponseEntity<Void> assignPatient(@Valid AssignAndRemoveRequest request, Authentication auth) {
+    public ResponseEntity<Void> assignPatient(@Valid @RequestBody AssignAndRemoveRequest request, Authentication auth) {
         personalService.assignPatient(request, Long.parseLong(auth.getName()), SecurityUtils.extractRole(auth));
         return ResponseEntity.noContent().build();
     }
 
     @DeleteMapping("/patients/remove")
-    @PreAuthorize("hasAnyRole('DOCTOR, RECEPTIONIST')")
+    @PreAuthorize("hasAnyRole('DOCTOR', 'RECEPTIONIST')")
     @Operation(summary = "DELETE /api/personal/patients/remove — remove a patient from a doctor")
-    public ResponseEntity<Void> removePatient(@Valid AssignAndRemoveRequest request, Authentication auth) {
+    public ResponseEntity<Void> removePatient(@Valid @RequestBody AssignAndRemoveRequest request, Authentication auth) {
         personalService.removePatient(request, Long.parseLong(auth.getName()), SecurityUtils.extractRole(auth));
         return ResponseEntity.noContent().build();
     }
