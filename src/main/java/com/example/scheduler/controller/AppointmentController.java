@@ -34,7 +34,7 @@ import java.util.Map;
 public class AppointmentController {
     private final AppointmentService appointmentService;
 
-    @PostMapping("/patient")
+    @PostMapping
     @Operation(summary = "POST /api/appointments — book an appointment for a patient on a given schedule slot")
     public ResponseEntity<AppointmentResponse> bookAppointment(@Valid @RequestBody AppointmentRequest request, Authentication auth) {
         if(SecurityUtils.extractRole(auth).equals(ERole.PATIENT.name())){

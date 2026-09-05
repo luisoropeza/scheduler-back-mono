@@ -32,6 +32,6 @@ public interface PatientRepository extends JpaRepository<Patient, Long> {
     @EntityGraph(attributePaths = {"account"})
     Optional<Patient> findById(Long id);
 
-    @EntityGraph(attributePaths = {"doctors", "doctors.account", "doctors.specialty", "doctors.role"})
-    Optional<Patient>  findPatientDoctorsById(Long id);
+    @EntityGraph(attributePaths = {"doctors.account", "doctors.specialty", "doctors.role"})
+    Optional<Patient> findPatientDoctorsById(Long id);
 }

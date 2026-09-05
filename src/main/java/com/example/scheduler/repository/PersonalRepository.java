@@ -40,6 +40,6 @@ public interface PersonalRepository extends JpaRepository<Personal, Long> {
     @EntityGraph(attributePaths = {"specialty", "account", "role"})
     Optional<Personal> findById(Long id);
 
-    @EntityGraph(attributePaths = {"patients", "patients.account", "patients.role"})
-    Optional<Personal>  findDoctorPatientsById(Long id);
+    @EntityGraph(attributePaths = {"patients.account", "patients.role"})
+    Optional<Personal> findDoctorPatientsById(Long id);
 }

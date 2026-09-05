@@ -177,7 +177,7 @@ public class AppointmentServiceImpl implements AppointmentService {
     }
 
     private Schedule getScheduleOrThrowById(Long scheduleId) {
-        return scheduleRepository.findById(scheduleId)
+        return scheduleRepository.findScheduleById(scheduleId)
                 .orElseThrow(() -> new ResourceNotFoundException("Schedule not found with id: " + scheduleId));
     }
 
