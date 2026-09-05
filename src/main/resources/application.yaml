@@ -9,9 +9,6 @@ spring:
   jpa:
     hibernate:
       ddl-auto: none
-    # Must stay false: with schema-per-tenant, OSIV opens the EntityManager (and
-    # binds it to tenant "public") before TenantFilter/AuthServiceImpl set TenantContext,
-    # so every tenant-scoped query would silently hit the empty public tables.
     open-in-view: false
     show-sql: true
     properties:

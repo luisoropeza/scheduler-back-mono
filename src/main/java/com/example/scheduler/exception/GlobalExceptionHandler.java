@@ -3,7 +3,6 @@ package com.example.scheduler.exception;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import org.springframework.security.authorization.AuthorizationDeniedException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -67,12 +66,12 @@ public class GlobalExceptionHandler {
                         .build());
     }
 
-    @ExceptionHandler(ObjectOptimisticLockingFailureException.class)
-    public ResponseEntity<ErrorResponse> handleOptimisticLock(ObjectOptimisticLockingFailureException ex) {
-        return ResponseEntity.status(HttpStatus.CONFLICT).body(
+    @ExceptionHandler(AuthorizationDeniedException.class)
+    public ResponseEntity<ErrorResponse> handleAuthorizationDeniedException(AuthorizationDeniedException ex) {
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(
                 ErrorResponse.builder()
-                        .status(HttpStatus.CONFLICT.value())
-                        .message("This schedule slot was just booked by someone else, please choose another")
+                        .status(HttpStatus.FORBIDDEN.value())
+                        .message(ex.getMessage())
                         .timestamp(LocalDateTime.now())
                         .build());
     }
@@ -98,16 +97,6 @@ public class GlobalExceptionHandler {
                 ErrorResponse.builder()
                         .status(HttpStatus.INTERNAL_SERVER_ERROR.value())
                         .message("Internal server error")
-                        .timestamp(LocalDateTime.now())
-                        .build());
-    }
-
-    @ExceptionHandler(AuthorizationDeniedException.class)
-    public ResponseEntity<ErrorResponse> handleAuthorizationDeniedException(AuthorizationDeniedException ex) {
-        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(
-                ErrorResponse.builder()
-                        .status(HttpStatus.FORBIDDEN.value())
-                        .message(ex.getMessage())
                         .timestamp(LocalDateTime.now())
                         .build());
     }
