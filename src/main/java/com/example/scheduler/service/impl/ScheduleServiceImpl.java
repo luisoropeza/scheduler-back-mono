@@ -106,15 +106,15 @@ public class ScheduleServiceImpl implements ScheduleService {
     }
 
     private void validateSlotTimes(ScheduleRequest request) {
-        if (!request.getEndTime().isAfter(request.getStartTime()))
+        if (!request.endTime().isAfter(request.startTime()))
             throw new BusinessException("The end time must be after the start time");
     }
 
     private Schedule buildSchedule(Personal doctor, ScheduleRequest request) {
         return Schedule.builder()
                 .doctor(doctor)
-                .startTime(request.getStartTime())
-                .endTime(request.getEndTime())
+                .startTime(request.startTime())
+                .endTime(request.endTime())
                 .build();
     }
 }

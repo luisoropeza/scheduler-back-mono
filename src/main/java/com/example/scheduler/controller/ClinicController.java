@@ -17,7 +17,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/clinics")
 @RequiredArgsConstructor
-@Tag(name = "Clinics", description = "Create and retrieve clinics")
+@Tag(name = "Clinics", description = "Clinics Controller")
 public class ClinicController {
 
     private final ClinicService clinicService;

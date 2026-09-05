@@ -77,8 +77,8 @@ public class PersonalServiceImpl implements PersonalService {
     @Override
     @Transactional
     public void assignPatient(AssignAndRemoveRequest request, Long userId, String role) {
-        Personal doctor = getPersonalPatientsOrThrowById(request.getDoctorId());
-        Patient patient = getPatientOrThrowById(request.getPatientId());
+        Personal doctor = getPersonalPatientsOrThrowById(request.doctorId());
+        Patient patient = getPatientOrThrowById(request.patientId());
         verifyDoctorPermission(role, doctor.getId(), userId);
         if (!doctor.getPatients().contains(patient)) {
             doctor.getPatients().add(patient);
@@ -89,8 +89,8 @@ public class PersonalServiceImpl implements PersonalService {
     @Override
     @Transactional
     public void removePatient(AssignAndRemoveRequest request, Long userId, String role) {
-        Personal doctor = getPersonalPatientsOrThrowById(request.getDoctorId());
-        Patient patient = getPatientOrThrowById(request.getPatientId());
+        Personal doctor = getPersonalPatientsOrThrowById(request.doctorId());
+        Patient patient = getPatientOrThrowById(request.patientId());
         verifyDoctorPermission(role, doctor.getId(), userId);
         if (doctor.getPatients().contains(patient)) {
             doctor.getPatients().remove(patient);

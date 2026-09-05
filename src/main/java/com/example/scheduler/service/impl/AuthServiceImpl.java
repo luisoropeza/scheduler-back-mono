@@ -25,13 +25,13 @@ public class AuthServiceImpl implements AuthService {
 
     @Override
     public LoginResponse login(LoginRequest request) {
-        String schemaName = "clinic_" + request.getClinicId();
+        String schemaName = "clinic_" + request.clinicId();
         try {
             TenantContext.setCurrentTenant(schemaName);
 
-            Personal personal = personalRepository.findByAccountEmail(request.getEmail()).orElse(null);
+            Personal personal = personalRepository.findByAccountEmail(request.email()).orElse(null);
             Patient patient = personal == null
-                    ? patientRepository.findByAccountEmail(request.getEmail()).orElse(null)
+                    ? patientRepository.findByAccountEmail(request.email()).orElse(null)
                     : null;
 
             if (personal == null && patient == null) {
@@ -42,11 +42,11 @@ public class AuthServiceImpl implements AuthService {
             var id = personal != null ? personal.getId() : patient.getId();
             var role = personal != null ? personal.getRole() : patient.getRole();
 
-            if (!passwordEncoder.matches(request.getPassword(), account.getPassword())) {
+            if (!passwordEncoder.matches(request.password(), account.getPassword())) {
                 throw new UnauthorizedException("Invalid Credentials");
             }
 
-            return new LoginResponse(jwtUtil.generate(id, role.getName().name(), request.getClinicId(), account.getName()));
+            return new LoginResponse(jwtUtil.generate(id, role.getName().name(), request.clinicId(), account.getName()));
         } finally {
             TenantContext.clear();
         }

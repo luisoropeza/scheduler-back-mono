@@ -30,7 +30,7 @@ import java.util.Map;
 @RestController
 @RequestMapping("/api/appointments")
 @RequiredArgsConstructor
-@Tag(name = "Appointments", description = "Book, confirmAppointmentById, cancelAppointmentById, and rescheduleAppointmentById appointments")
+@Tag(name = "Appointments", description = "Appointment Controller")
 public class AppointmentController {
     private final AppointmentService appointmentService;
 
@@ -44,7 +44,7 @@ public class AppointmentController {
     }
 
     @GetMapping("/{appointmentId}")
-    @Operation(summary = "GET /api/appointments/{id} — get appointment details by ID")
+    @Operation(summary = "GET /api/appointments/{id} — get an appointment details by Id")
     public ResponseEntity<AppointmentResponse> findAppointmentById(@PathVariable Long appointmentId, Authentication auth) {
         return ResponseEntity.ok(appointmentService.findAppointmentById(appointmentId, Long.parseLong(auth.getName()), SecurityUtils.extractRole(auth)));
     }
@@ -70,14 +70,14 @@ public class AppointmentController {
 
     @PatchMapping("/{appointmentId}/confirm")
     @PreAuthorize("hasAnyRole('DOCTOR', 'RECEPTIONIST')")
-    @Operation(summary = "PATCH /api/appointments/{id}/confirmAppointmentById — confirmAppointmentById a pending appointment")
+    @Operation(summary = "PATCH /api/appointments/{id}/confirmAppointmentById — confirm a pending appointment")
     public ResponseEntity<AppointmentResponse> confirmAppointmentById(@PathVariable Long appointmentId, Authentication auth) {
         return ResponseEntity.ok(appointmentService.confirmAppointmentById(appointmentId, Long.parseLong(auth.getName()), SecurityUtils.extractRole(auth)));
     }
 
     @PatchMapping("/{appointmentId}/cancel")
     @PreAuthorize("hasAnyRole('DOCTOR', 'RECEPTIONIST')")
-    @Operation(summary = "PATCH /api/appointments/{id}/cancelAppointmentById — cancelAppointmentById an appointment, releases the slot back to AVAILABLE")
+    @Operation(summary = "PATCH /api/appointments/{id}/cancelAppointmentById — cancel an appointment, releases the slot back to AVAILABLE")
     public ResponseEntity<AppointmentResponse> cancelAppointmentById(@PathVariable Long appointmentId, Authentication auth) {
         return ResponseEntity.ok(appointmentService.cancelAppointmentById(appointmentId, Long.parseLong(auth.getName()), SecurityUtils.extractRole(auth)));
     }

@@ -1,13 +1,10 @@
 package com.example.scheduler.dto.personal;
 
-import lombok.Data;
-
-@Data
-public class PersonalResponse {
-    private Long id;
-    private String name;
-    private String email;
-    private boolean active;
-    private String roleName;
-    private String specialtyName;
-}
+public record PersonalResponse(
+        Long id,
+        String name,
+        String email,
+        boolean active,
+        String roleName,
+        String specialtyName
+) {}

@@ -1,20 +1,17 @@
 package com.example.scheduler.dto.schedule;
 
-import lombok.Data;
-
 import java.time.LocalDateTime;
 
-@Data
-public class ScheduleResponse {
-    private Long id;
+public record ScheduleResponse(
+        Long id,
 
-    // Doctor
-    private Long doctorId;
-    private String doctorName;
-    private String doctorSpecialty;
-    private String doctorEmail;
+        // Doctor
+        Long doctorId,
+        String doctorName,
+        String doctorSpecialty,
+        String doctorEmail,
 
-    private LocalDateTime startTime;
-    private LocalDateTime endTime;
-    private String status;
-}
+        LocalDateTime startTime,
+        LocalDateTime endTime,
+        String status
+) {}

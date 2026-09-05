@@ -4,25 +4,17 @@ import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
 
-@Data
-@Builder
-@NoArgsConstructor
-@AllArgsConstructor
-public class PersonalRegisterRequest {
-    @NotBlank
-    private String name;
-    @NotBlank
-    @Email
-    private String email;
-    @NotBlank
-    @Size(min = 8)
-    private String password;
-    @NotNull
-    private Long roleId;
-    private Long specialtyId;
-}
+public record PersonalRegisterRequest(
+        @NotBlank
+        String name,
+        @NotBlank
+        @Email
+        String email,
+        @NotBlank
+        @Size(min = 8)
+        String password,
+        @NotNull
+        Long roleId,
+        Long specialtyId
+) {}

@@ -49,13 +49,13 @@ public class ClinicServiceImpl implements ClinicService {
             return tx.execute(_ -> {
                 Role adminRole = roleRepository.findByName(ERole.ADMINISTRATOR)
                         .orElseThrow(() -> new ResourceNotFoundException("Role ADMINISTRATOR not found"));
-                if(accountRepository.existsByEmail(request.getAdminEmail()))
-                    throw new ResourceNotFoundException("Account with email " + request.getAdminEmail() + " already exists");
+                if(accountRepository.existsByEmail(request.adminEmail()))
+                    throw new ResourceNotFoundException("Account with email " + request.adminEmail() + " already exists");
                 Account account = accountRepository.save(Account.builder()
-                        .name(request.getAdminName())
-                        .email(request.getAdminEmail())
-                        .ci(request.getCi())
-                        .password(passwordEncoder.encode(request.getAdminPassword()))
+                        .name(request.adminName())
+                        .email(request.adminEmail())
+                        .ci(request.ci())
+                        .password(passwordEncoder.encode(request.adminPassword()))
                         .build());
                 Personal admin = personalRepository.save(Personal.builder()
                         .account(account)

@@ -48,8 +48,8 @@ public class AppointmentServiceImpl implements AppointmentService {
     @Override
     @Transactional
     public AppointmentResponse bookAppointment(AppointmentRequest request,  Long patientId) {
-        Schedule schedule = getScheduleOrThrowById(request.getScheduleId());
-        Patient patient = getPatientOrThrowById(request.getPatientId());
+        Schedule schedule = getScheduleOrThrowById(request.scheduleId());
+        Patient patient = getPatientOrThrowById(request.patientId());
         if(!patientId.equals(patient.getId())){
             throw new ForbiddenException("Can't book an appointment for another patient");
         }
@@ -66,8 +66,8 @@ public class AppointmentServiceImpl implements AppointmentService {
     @Override
     @Transactional
     public AppointmentResponse bookAppointment(AppointmentRequest request) {
-        Schedule schedule = getScheduleOrThrowById(request.getScheduleId());
-        Patient patient = getPatientOrThrowById(request.getPatientId());
+        Schedule schedule = getScheduleOrThrowById(request.scheduleId());
+        Patient patient = getPatientOrThrowById(request.patientId());
         validateAvailabilityAndDate(schedule);
         schedule.setStatus(ScheduleStatus.BOOKED);
         Appointment appointment = Appointment.builder()
@@ -118,7 +118,7 @@ public class AppointmentServiceImpl implements AppointmentService {
     public AppointmentResponse rescheduleAppointmentById(Long AppointmentId, RescheduleRequest request, Long userId, String role) {
         Appointment appointment = getAppointmentOrThrowById(AppointmentId);
         verifyPermission(appointment, userId, role);
-        Schedule newSchedule = getScheduleOrThrowById(request.getScheduleId());
+        Schedule newSchedule = getScheduleOrThrowById(request.scheduleId());
         if (appointment.getStatus() == AppointmentStatus.CANCELLED)
             throw new BusinessException("Cannot rescheduleAppointmentById a cancelled appointment");
         if (newSchedule.getStatus() != ScheduleStatus.AVAILABLE)
@@ -163,12 +163,11 @@ public class AppointmentServiceImpl implements AppointmentService {
 
     private AppointmentSummaryItem toSummaryItem(Appointment appointment) {
         LocalDateTime startTime = appointment.getSchedule().getStartTime();
-        return AppointmentSummaryItem.builder()
-                .clientName(appointment.getPatient().getAccount().getName())
-                .doctorName(appointment.getSchedule().getDoctor().getAccount().getName())
-                .appointmentDate(startTime.toLocalDate())
-                .appointmentTime(startTime.format(TIME_FORMATTER))
-                .build();
+        return new AppointmentSummaryItem(
+                appointment.getPatient().getAccount().getName(),
+                appointment.getSchedule().getDoctor().getAccount().getName(),
+                startTime.toLocalDate(),
+                startTime.format(TIME_FORMATTER));
     }
 
     private Appointment getAppointmentOrThrowById(Long appointmentId) {

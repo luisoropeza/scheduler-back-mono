@@ -1,12 +1,9 @@
 package com.example.scheduler.dto.patient;
 
-import lombok.Data;
-
-@Data
-public class PatientResponse {
-    private Long id;
-    private String name;
-    private String email;
-    private String phoneNumber;
-    private boolean active;
-}
+public record PatientResponse(
+        Long id,
+        String name,
+        String email,
+        String phoneNumber,
+        boolean active
+) {}
