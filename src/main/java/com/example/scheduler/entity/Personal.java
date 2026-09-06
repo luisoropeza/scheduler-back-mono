@@ -19,7 +19,7 @@ public class Personal {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne(optional = false,  fetch = FetchType.LAZY)
+    @ManyToOne(optional = false,  fetch = FetchType.LAZY, cascade = CascadeType.PERSIST)
     @JoinColumn(name = "personal_account_id")
     private Account account;
 

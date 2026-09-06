@@ -20,6 +20,7 @@ import com.example.scheduler.service.PersonalService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -36,6 +37,7 @@ public class PersonalServiceImpl implements PersonalService {
     private final AccountRepository accountRepository;
     private final PersonalMapper personalMapper;
     private final PatientMapper patientMapper;
+    private final BCryptPasswordEncoder passwordEncoder;
 
     @Override
     public Page<PersonalResponse> findAllDoctors(Long specialtyId, Boolean isActive, Pageable pageable) {
@@ -56,18 +58,18 @@ public class PersonalServiceImpl implements PersonalService {
     }
 
     @Override
+    @Transactional
     public PersonalResponse createPersonal(PersonalRegisterRequest request) {
         var role = getRoleOrThrowById(request.roleId());
         var specialty = getSpecialtyOrThrowById(request.specialtyId());
         var personal = personalRepository.findByAccountCi(request.ci())
                 .orElseGet(() -> {
-                    if(accountRepository.existsByEmail(request.email()))
-                        throw new BadRequestException("Account with email " + request.email() + " already exists");
-                    if(accountRepository.existsByCi(request.ci()))
-                        throw new BadRequestException("Account with email " + request.ci() + " already exists");
+                    if(accountRepository.existsByEmailOrCi(request.email(), request.ci()))
+                        throw new BadRequestException("Account with email " + request.email() + " or ci"+ request.ci() +" already exists");
                     return personalMapper.toEntity(request);
                 });
         personal.setRole(role);
+        personal.getAccount().setPassword(passwordEncoder.encode(request.password()));
         if(role.getName().equals(ERole.DOCTOR))
             personal.setSpecialty(specialty);
         return personalMapper.toResponse(personalRepository.save(personal));

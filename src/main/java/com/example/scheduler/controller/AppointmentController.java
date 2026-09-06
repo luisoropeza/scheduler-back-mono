@@ -50,7 +50,7 @@ public class AppointmentController {
     }
 
     @GetMapping
-    @Operation(summary = "GET /api/appointments — list appointments, filtered by ?doctorId={id}&patientId={id}&status={status} (all optional; DOCTOR/PATIENT callers are scoped to themselves, RECEPTIONIST can filter freely or omit both for a clinic-wide list)")
+    @Operation(summary = "GET /api/appointments — list appointments, filtered by ?doctorId={id}&patientId={id}&status={status}")
     public ResponseEntity<Page<AppointmentResponse>> findAllAppointments(
             @RequestParam(required = false) Long doctorId,
             @RequestParam(required = false) Long patientId,
@@ -90,7 +90,7 @@ public class AppointmentController {
     }
 
     @GetMapping("/board")
-    @Operation(summary = "GET /api/appointments/board — appointments grouped by status, filtered by ?from={date}&to={date}&doctorId={id}&clientId={id} (doctorId/clientId optional; DOCTOR/PATIENT callers are scoped to themselves, RECEPTIONIST can filter freely or omit both for a clinic-wide view)")
+    @Operation(summary = "GET /api/appointments/board — appointments grouped by status, filtered by ?from={date}&to={date}&doctorId={id}&clientId={id}")
     public ResponseEntity<Map<AppointmentStatus, List<AppointmentSummaryItem>>> getBoardByRange(
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to,
@@ -108,7 +108,7 @@ public class AppointmentController {
     }
 
     @GetMapping("/calendar")
-    @Operation(summary = "GET /api/appointments/calendar — appointments grouped by day, filtered by ?month={month}&year={year}&doctorId={id}&clientId={id} (doctorId/clientId optional; DOCTOR/PATIENT callers are scoped to themselves, RECEPTIONIST can filter freely or omit both for a clinic-wide view)")
+    @Operation(summary = "GET /api/appointments/calendar — appointments grouped by day, filtered by ?month={month}&year={year}&doctorId={id}&clientId={id}")
     public ResponseEntity<Map<String, List<AppointmentSummaryItem>>> getCalendar(
             @RequestParam int month,
             @RequestParam int year,

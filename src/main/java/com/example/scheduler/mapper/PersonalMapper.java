@@ -25,6 +25,8 @@ public interface PersonalMapper {
     void toEntityUpdated(PersonalRequest request, @MappingTarget Personal personal);
     @Mapping(target = "account.name", source = "name")
     @Mapping(target = "account.email", source = "email")
+    @Mapping(target = "account.ci", source = "ci")
+    @Mapping(target = "account.password", ignore = true)
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "role", ignore = true)
     @Mapping(target = "active", ignore = true)

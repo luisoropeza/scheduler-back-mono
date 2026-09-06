@@ -49,10 +49,8 @@ public class ClinicServiceImpl implements ClinicService {
             TenantContext.setCurrentTenant(schemaName);
             return tx.execute(_ -> {
                 var adminRole = roleRepository.getByName(ERole.ADMINISTRATOR);
-                if(accountRepository.existsByEmail(request.adminEmail()))
-                    throw new BadRequestException("Account with email " + request.adminEmail() + " already exists");
-                if(accountRepository.existsByCi(request.adminCi()))
-                    throw new BadRequestException("Account with email " + request.adminEmail() + " already exists");
+                if(accountRepository.existsByEmailOrCi(request.adminEmail(), request.adminCi()))
+                    throw new BadRequestException("Account with email " + request.adminEmail() + " or ci"+ request.adminCi() +" already exists");
                 var account = accountRepository.save(Account.builder()
                         .name(request.adminName())
                         .email(request.adminEmail())

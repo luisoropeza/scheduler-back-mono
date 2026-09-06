@@ -17,6 +17,7 @@ import com.example.scheduler.service.PatientService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -31,6 +32,7 @@ public class PatientServiceImpl implements PatientService {
     private final AccountRepository accountRepository;
     private final PatientMapper patientMapper;
     private final PersonalMapper personalMapper;
+    private final BCryptPasswordEncoder passwordEncoder;
 
     @Override
     public Page<PatientResponse> findAllPatients(Pageable pageable) {
@@ -38,17 +40,17 @@ public class PatientServiceImpl implements PatientService {
     }
 
     @Override
+    @Transactional
     public PatientResponse createPatient(PatientRegisterRequest request) {
         var patient = patientRepository.findByAccountCi(request.ci())
                 .orElseGet(() -> {
-                    if(accountRepository.existsByEmail(request.email()))
-                        throw new BadRequestException("Account with email " + request.email() + " already exists");
-                    if(accountRepository.existsByCi(request.ci()))
-                        throw new BadRequestException("Account with email " + request.ci() + " already exists");
+                    if(accountRepository.existsByEmailOrCi(request.email(), request.ci()))
+                        throw new BadRequestException("Account with email " + request.email() + " or ci"+ request.ci() +" already exists");
                     return patientMapper.toEntity(request);
                 });
         var role = roleRepository.getByName(ERole.PATIENT);
         patient.setRole(role);
+        patient.getAccount().setPassword(passwordEncoder.encode(request.password()));
         return patientMapper.toResponse(patientRepository.save(patient));
     }
 
