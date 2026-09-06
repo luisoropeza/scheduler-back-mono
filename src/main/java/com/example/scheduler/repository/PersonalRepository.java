@@ -34,7 +34,13 @@ public interface PersonalRepository extends JpaRepository<Personal, Long> {
             "JOIN FETCH p.account a " +
             "JOIN FETCH p.role r " +
             "WHERE a.email = :email")
-    Optional<Personal> findByAccountEmail(@Param("email") String accountEmail);
+    Optional<Personal> findByAccountEmail(@Param("email") String email);
+
+    @Query("SELECT p FROM Personal p " +
+            "JOIN FETCH p.account a " +
+            "JOIN FETCH p.role r " +
+            "WHERE a.ci = :ci")
+    Optional<Personal> findByAccountCi(@Param("ci") String ci);
 
     @NullMarked
     @EntityGraph(attributePaths = {"specialty", "account", "role"})

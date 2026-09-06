@@ -19,5 +19,5 @@ public record ClinicRequest(
         @Size(min = 8)
         String adminPassword,
         @NotBlank
-        String ci
+        String adminCi
 ) {}

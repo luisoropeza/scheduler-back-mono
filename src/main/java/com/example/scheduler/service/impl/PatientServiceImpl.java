@@ -1,13 +1,18 @@
 package com.example.scheduler.service.impl;
 
+import com.example.scheduler.dto.patient.PatientRegisterRequest;
 import com.example.scheduler.dto.patient.PatientRequest;
 import com.example.scheduler.dto.patient.PatientResponse;
 import com.example.scheduler.dto.personal.PersonalResponse;
 import com.example.scheduler.entity.Patient;
+import com.example.scheduler.enums.ERole;
+import com.example.scheduler.exception.BadRequestException;
 import com.example.scheduler.exception.ResourceNotFoundException;
 import com.example.scheduler.mapper.PatientMapper;
 import com.example.scheduler.mapper.PersonalMapper;
+import com.example.scheduler.repository.AccountRepository;
 import com.example.scheduler.repository.PatientRepository;
+import com.example.scheduler.repository.RoleRepository;
 import com.example.scheduler.service.PatientService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -22,12 +27,29 @@ import java.util.List;
 @Transactional(readOnly = true)
 public class PatientServiceImpl implements PatientService {
     private final PatientRepository patientRepository;
+    private final RoleRepository  roleRepository;
+    private final AccountRepository accountRepository;
     private final PatientMapper patientMapper;
     private final PersonalMapper personalMapper;
 
     @Override
     public Page<PatientResponse> findAllPatients(Pageable pageable) {
         return patientRepository.findAll(pageable).map(patientMapper::toResponse);
+    }
+
+    @Override
+    public PatientResponse createPatient(PatientRegisterRequest request) {
+        var patient = patientRepository.findByAccountCi(request.ci())
+                .orElseGet(() -> {
+                    if(accountRepository.existsByEmail(request.email()))
+                        throw new BadRequestException("Account with email " + request.email() + " already exists");
+                    if(accountRepository.existsByCi(request.ci()))
+                        throw new BadRequestException("Account with email " + request.ci() + " already exists");
+                    return patientMapper.toEntity(request);
+                });
+        var role = roleRepository.getByName(ERole.PATIENT);
+        patient.setRole(role);
+        return patientMapper.toResponse(patientRepository.save(patient));
     }
 
     @Override
@@ -44,7 +66,7 @@ public class PatientServiceImpl implements PatientService {
     @Override
     @Transactional
     public PatientResponse updatePatientById(Long patientId, PatientRequest request) {
-        Patient patient = getPatientOrThrowById(patientId);
+        var patient = getPatientOrThrowById(patientId);
         patientMapper.toEntityUpdated(request, patient);
         return patientMapper.toResponse(patientRepository.save(patient));
     }
@@ -52,14 +74,14 @@ public class PatientServiceImpl implements PatientService {
     @Override
     @Transactional
     public void deactivatePatientById(Long patientId) {
-        Patient patient = getPatientOrThrowById(patientId);
+        var patient = getPatientOrThrowById(patientId);
         patient.setActive(false);
         patientRepository.save(patient);
     }
 
     @Override
     public List<PersonalResponse> getDoctorsOfPatient(Long patientId) {
-        Patient patient = getPatientDoctorsOrThrowById(patientId);
+        var patient = getPatientDoctorsOrThrowById(patientId);
         return personalMapper.toResponseList(patient.getDoctors());
     }
 

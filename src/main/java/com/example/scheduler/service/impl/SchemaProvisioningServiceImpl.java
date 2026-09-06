@@ -35,7 +35,7 @@ public class SchemaProvisioningServiceImpl implements SchemaProvisioningService 
     public void createTenantSchema(String schemaName) {
         validateSchemaName(schemaName);
         try {
-            String ddl = loadDdl(TENANT_SCHEMA_DDL).replace("{schema}", schemaName);
+            var ddl = loadDdl(TENANT_SCHEMA_DDL).replace("{schema}", schemaName);
             executeDdl("CREATE SCHEMA IF NOT EXISTS " + schemaName + ";" + ddl);
         } catch (SQLException | IOException e) {
             throw new IllegalStateException("Failed to provision tenant schema: " + schemaName, e);

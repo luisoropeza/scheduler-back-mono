@@ -16,13 +16,19 @@ public interface PatientRepository extends JpaRepository<Patient, Long> {
             "JOIN FETCH p.account a " +
             "JOIN FETCH p.role r " +
             "WHERE a.email = :email")
-    Optional<Patient> findByAccountEmail(@Param("email") String accountEmail);
+    Optional<Patient> findByAccountEmail(@Param("email") String email);
 
     @Query("SELECT p FROM Patient p " +
             "JOIN FETCH p.account a " +
             "JOIN FETCH p.role r " +
             "WHERE a.phoneNumber = :phoneNumber")
     Optional<Patient> findByAccountPhoneNumber(@Param("phoneNumber") String phoneNumber);
+
+    @Query("SELECT p FROM Patient p " +
+            "JOIN FETCH p.account a " +
+            "JOIN FETCH p.role r " +
+            "WHERE a.ci = :ci")
+    Optional<Patient> findByAccountCi(@Param("ci") String ci);
 
     @NullMarked
     @EntityGraph(attributePaths = {"account"})

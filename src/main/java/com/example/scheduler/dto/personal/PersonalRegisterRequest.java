@@ -12,9 +12,12 @@ public record PersonalRegisterRequest(
         @Email
         String email,
         @NotBlank
+        String ci,
+        @NotBlank
         @Size(min = 8)
         String password,
         @NotNull
         Long roleId,
+        @NotNull
         Long specialtyId
 ) {}

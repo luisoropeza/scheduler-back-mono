@@ -48,14 +48,14 @@ public class AppointmentServiceImpl implements AppointmentService {
     @Override
     @Transactional
     public AppointmentResponse bookAppointment(AppointmentRequest request,  Long patientId) {
-        Schedule schedule = getScheduleOrThrowById(request.scheduleId());
-        Patient patient = getPatientOrThrowById(request.patientId());
+        var schedule = getScheduleOrThrowById(request.scheduleId());
+        var patient = getPatientOrThrowById(request.patientId());
         if(!patientId.equals(patient.getId())){
             throw new ForbiddenException("Can't book an appointment for another patient");
         }
         validateAvailabilityAndDate(schedule);
         schedule.setStatus(ScheduleStatus.BOOKED);
-        Appointment appointment = Appointment.builder()
+        var appointment = Appointment.builder()
                 .schedule(schedule)
                 .patient(patient)
                 .status(AppointmentStatus.PENDING)
@@ -66,11 +66,11 @@ public class AppointmentServiceImpl implements AppointmentService {
     @Override
     @Transactional
     public AppointmentResponse bookAppointment(AppointmentRequest request) {
-        Schedule schedule = getScheduleOrThrowById(request.scheduleId());
-        Patient patient = getPatientOrThrowById(request.patientId());
+        var schedule = getScheduleOrThrowById(request.scheduleId());
+        var patient = getPatientOrThrowById(request.patientId());
         validateAvailabilityAndDate(schedule);
         schedule.setStatus(ScheduleStatus.BOOKED);
-        Appointment appointment = Appointment.builder()
+        var appointment = Appointment.builder()
                 .schedule(schedule)
                 .patient(patient)
                 .status(AppointmentStatus.CONFIRMED)
@@ -80,7 +80,7 @@ public class AppointmentServiceImpl implements AppointmentService {
 
     @Override
     public AppointmentResponse findAppointmentById(Long appointmentId, Long userId, String role) {
-        Appointment appointment = getAppointmentOrThrowById(appointmentId);
+        var appointment = getAppointmentOrThrowById(appointmentId);
         verifyPermission(appointment, userId, role);
         return appointmentMapper.toResponse(appointment);
     }
@@ -93,7 +93,7 @@ public class AppointmentServiceImpl implements AppointmentService {
     @Override
     @Transactional
     public AppointmentResponse confirmAppointmentById(Long AppointmentId, Long userId, String role) {
-        Appointment appointment = getAppointmentOrThrowById(AppointmentId);
+        var appointment = getAppointmentOrThrowById(AppointmentId);
         verifyPermission(appointment, userId, role);
         if (appointment.getStatus() != AppointmentStatus.PENDING)
             throw new BusinessException("Just can confirm an appointment pending");
@@ -104,7 +104,7 @@ public class AppointmentServiceImpl implements AppointmentService {
     @Override
     @Transactional
     public AppointmentResponse cancelAppointmentById(Long AppointmentId, Long userId, String role) {
-        Appointment appointment = getAppointmentOrThrowById(AppointmentId);
+        var appointment = getAppointmentOrThrowById(AppointmentId);
         verifyPermission(appointment, userId, role);
         if (appointment.getStatus() == AppointmentStatus.CANCELLED)
             throw new BusinessException("This appointment is already cancelled");
@@ -116,9 +116,9 @@ public class AppointmentServiceImpl implements AppointmentService {
     @Override
     @Transactional
     public AppointmentResponse rescheduleAppointmentById(Long AppointmentId, RescheduleRequest request, Long userId, String role) {
-        Appointment appointment = getAppointmentOrThrowById(AppointmentId);
+        var appointment = getAppointmentOrThrowById(AppointmentId);
         verifyPermission(appointment, userId, role);
-        Schedule newSchedule = getScheduleOrThrowById(request.scheduleId());
+        var newSchedule = getScheduleOrThrowById(request.scheduleId());
         if (appointment.getStatus() == AppointmentStatus.CANCELLED)
             throw new BusinessException("Cannot rescheduleAppointmentById a cancelled appointment");
         if (newSchedule.getStatus() != ScheduleStatus.AVAILABLE)
@@ -139,7 +139,7 @@ public class AppointmentServiceImpl implements AppointmentService {
 
     @Override
     public Map<String, List<AppointmentSummaryItem>> getCalendar(int month, int year, Long doctorId, Long patientId) {
-        LocalDate monthStart = LocalDate.of(year, month, 1);
+        var monthStart = LocalDate.of(year, month, 1);
         return groupByDay(appointmentRepository.findByFiltersAndDateRange(doctorId, patientId, monthStart.atStartOfDay(), monthStart.plusMonths(1).atStartOfDay()));
     }
 
@@ -162,7 +162,7 @@ public class AppointmentServiceImpl implements AppointmentService {
     }
 
     private AppointmentSummaryItem toSummaryItem(Appointment appointment) {
-        LocalDateTime startTime = appointment.getSchedule().getStartTime();
+        var startTime = appointment.getSchedule().getStartTime();
         return new AppointmentSummaryItem(
                 appointment.getPatient().getAccount().getName(),
                 appointment.getSchedule().getDoctor().getAccount().getName(),

@@ -53,7 +53,7 @@ public class ScheduleServiceImpl implements ScheduleService {
     public ScheduleResponse findScheduleById(Long scheduleId, Long userId, String role) {
         if(role.equals(ERole.DOCTOR.name())){
             getActiveDoctorOrThrowById(userId);
-            Schedule schedule = getScheduleOrThrowById(scheduleId);
+            var schedule = getScheduleOrThrowById(scheduleId);
             verifyDoctorPermission(schedule, userId);
             return scheduleMapper.toResponse(schedule);
         }
@@ -63,7 +63,7 @@ public class ScheduleServiceImpl implements ScheduleService {
     @Override
     @Transactional
     public ScheduleResponse createSchedule(Long userId, ScheduleRequest request) {
-        Personal doctor = getActiveDoctorOrThrowById(userId);
+        var doctor = getActiveDoctorOrThrowById(userId);
         validateSlotTimes(request);
         return scheduleMapper.toResponse(scheduleRepository.save(buildSchedule(doctor, request)));
     }
@@ -71,7 +71,7 @@ public class ScheduleServiceImpl implements ScheduleService {
     @Override
     @Transactional
     public List<ScheduleResponse> createSchedulesBatch(Long userId, List<ScheduleRequest> requests) {
-        Personal doctor = getActiveDoctorOrThrowById(userId);
+        var doctor = getActiveDoctorOrThrowById(userId);
         requests.forEach(this::validateSlotTimes);
         return scheduleMapper.toResponseList(scheduleRepository.saveAll(requests.stream().map(r -> buildSchedule(doctor, r)).toList()));
     }
@@ -80,7 +80,7 @@ public class ScheduleServiceImpl implements ScheduleService {
     @Transactional
     public void deleteScheduleById(Long scheduleId, Long userId) {
         getActiveDoctorOrThrowById(userId);
-        Schedule schedule = getScheduleOrThrowById(scheduleId);
+        var schedule = getScheduleOrThrowById(scheduleId);
         verifyDoctorPermission(schedule, userId);
         if (schedule.getStatus() == ScheduleStatus.BOOKED)
             throw new BusinessException("Can't remove schedule already booked");
@@ -88,7 +88,7 @@ public class ScheduleServiceImpl implements ScheduleService {
     }
 
     private Personal getActiveDoctorOrThrowById(Long personalId) {
-        Personal doctor = personalRepository.findById(personalId)
+        var doctor = personalRepository.findById(personalId)
                 .orElseThrow(() -> new ResourceNotFoundException("Doctor not found with id: " + personalId));
         if (!doctor.isActive()) throw new BusinessException("This doctor is not active");
         return doctor;

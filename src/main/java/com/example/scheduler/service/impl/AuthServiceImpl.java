@@ -25,12 +25,12 @@ public class AuthServiceImpl implements AuthService {
 
     @Override
     public LoginResponse login(LoginRequest request) {
-        String schemaName = "clinic_" + request.clinicId();
+        var schemaName = "clinic_" + request.clinicId();
         try {
             TenantContext.setCurrentTenant(schemaName);
 
-            Personal personal = personalRepository.findByAccountEmail(request.email()).orElse(null);
-            Patient patient = personal == null
+            var personal = personalRepository.findByAccountEmail(request.email()).orElse(null);
+            var patient = personal == null
                     ? patientRepository.findByAccountEmail(request.email()).orElse(null)
                     : null;
 

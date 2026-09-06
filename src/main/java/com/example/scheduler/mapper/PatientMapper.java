@@ -1,5 +1,6 @@
 package com.example.scheduler.mapper;
 
+import com.example.scheduler.dto.patient.PatientRegisterRequest;
 import com.example.scheduler.dto.patient.PatientRequest;
 import com.example.scheduler.dto.patient.PatientResponse;
 import com.example.scheduler.entity.Patient;
@@ -21,5 +22,15 @@ public interface PatientMapper {
     @Mapping(target = "active", ignore = true)
     @Mapping(target = "doctors", ignore = true)
     void toEntityUpdated(PatientRequest request, @MappingTarget Patient patient);
+    @Mapping(target = "account.name", source = "name")
+    @Mapping(target = "account.email", source = "email")
+    @Mapping(target = "account.ci", source = "ci")
+    @Mapping(target = "account.password", source = "password")
+    @Mapping(target = "account.phoneNumber", source = "phoneNumber")
+    @Mapping(target = "id", ignore = true)
+    @Mapping(target = "role", ignore = true)
+    @Mapping(target = "active", ignore = true)
+    @Mapping(target = "doctors", ignore = true)
+    Patient toEntity(PatientRegisterRequest request);
     List<PatientResponse> toResponseList(List<Patient> patients);
 }

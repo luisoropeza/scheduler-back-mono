@@ -58,7 +58,7 @@ public class AppointmentController {
             @PageableDefault(sort = "schedule.startTime", direction = Sort.Direction.ASC) Pageable pageable,
             Authentication auth
     ) {
-        String role = SecurityUtils.extractRole(auth);
+        var role = SecurityUtils.extractRole(auth);
         if (role.equals(ERole.DOCTOR.name())){
             return ResponseEntity.ok(appointmentService.findAllAppointments(Long.parseLong(auth.getName()), patientId, status, pageable));
         }
@@ -97,7 +97,7 @@ public class AppointmentController {
             @RequestParam(required = false) Long doctorId,
             @RequestParam(required = false) Long patientId,
             Authentication auth) {
-        String role = SecurityUtils.extractRole(auth);
+        var role = SecurityUtils.extractRole(auth);
         if (role.equals(ERole.DOCTOR.name())){
             return ResponseEntity.ok(appointmentService.getBoardByRange(from, to, Long.parseLong(auth.getName()), patientId));
         }
@@ -115,7 +115,7 @@ public class AppointmentController {
             @RequestParam(required = false) Long doctorId,
             @RequestParam(required = false) Long patientId,
             Authentication auth) {
-        String role = SecurityUtils.extractRole(auth);
+        var role = SecurityUtils.extractRole(auth);
         if (role.equals(ERole.DOCTOR.name())){
             return ResponseEntity.ok(appointmentService.getCalendar(month, year, Long.parseLong(auth.getName()), patientId));
         }

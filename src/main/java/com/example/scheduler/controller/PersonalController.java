@@ -2,6 +2,7 @@ package com.example.scheduler.controller;
 
 import com.example.scheduler.dto.patient.PatientResponse;
 import com.example.scheduler.dto.personal.AssignAndRemoveRequest;
+import com.example.scheduler.dto.personal.PersonalRegisterRequest;
 import com.example.scheduler.dto.personal.PersonalRequest;
 import com.example.scheduler.dto.personal.PersonalResponse;
 import com.example.scheduler.security.SecurityUtils;
@@ -49,6 +50,13 @@ public class PersonalController {
             @PageableDefault(sort = "id", direction = Sort.Direction.ASC) Pageable pageable
     ) {
         return ResponseEntity.ok(personalService.findAllPersonal(specialtyId, isActive, roleId, pageable));
+    }
+
+    @PostMapping
+    @PreAuthorize("hasAnyRole('ADMINISTRATOR')")
+    @Operation(summary = "POST /api/personal/{personalId} — create a personal user")
+    public ResponseEntity<PersonalResponse> createPersonal(PersonalRegisterRequest request){
+        return ResponseEntity.ok(personalService.createPersonal(request));
     }
 
     @GetMapping("/{personalId}")

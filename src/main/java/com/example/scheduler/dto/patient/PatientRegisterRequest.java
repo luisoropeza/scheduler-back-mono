@@ -11,6 +11,8 @@ public record PatientRegisterRequest(
         @Email
         String email,
         @NotBlank
+        String ci,
+        @NotBlank
         @Size(min = 8)
         String password,
         String phoneNumber

@@ -1,5 +1,6 @@
 package com.example.scheduler.controller;
 
+import com.example.scheduler.dto.patient.PatientRegisterRequest;
 import com.example.scheduler.dto.patient.PatientRequest;
 import com.example.scheduler.dto.patient.PatientResponse;
 import com.example.scheduler.dto.personal.PersonalResponse;
@@ -31,6 +32,13 @@ public class PatientController {
     @Operation(summary = "GET /api/patients — list all patients")
     public ResponseEntity<Page<PatientResponse>> findAllPatients(@PageableDefault(sort = "id", direction = Sort.Direction.ASC) Pageable pageable) {
         return ResponseEntity.ok(patientService.findAllPatients(pageable));
+    }
+
+    @PostMapping
+    @PreAuthorize("hasAnyRole('DOCTOR', 'RECEPTIONIST')")
+    @Operation(summary = "POST /api/patients — create a patient user")
+    public ResponseEntity<PatientResponse> createPatient(@Valid @RequestBody PatientRegisterRequest request) {
+        return ResponseEntity.ok(patientService.createPatient(request));
     }
 
     @GetMapping("/{patientId}")

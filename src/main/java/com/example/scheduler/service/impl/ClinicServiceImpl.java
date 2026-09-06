@@ -9,6 +9,7 @@ import com.example.scheduler.entity.Clinic;
 import com.example.scheduler.entity.Personal;
 import com.example.scheduler.entity.Role;
 import com.example.scheduler.enums.ERole;
+import com.example.scheduler.exception.BadRequestException;
 import com.example.scheduler.exception.ResourceNotFoundException;
 import com.example.scheduler.mapper.ClinicMapper;
 import com.example.scheduler.repository.AccountRepository;
@@ -40,24 +41,25 @@ public class ClinicServiceImpl implements ClinicService {
 
     @Override
     public ClinicCreatedResponse createClinic(ClinicRequest request) {
-        TransactionTemplate tx = new TransactionTemplate(transactionManager);
-        Clinic clinic = tx.execute(_ -> clinicRepository.save(clinicMapper.toEntity(request)));
-        String schemaName = "clinic_" + clinic.getId();
+        var tx = new TransactionTemplate(transactionManager);
+        var clinic = tx.execute(_ -> clinicRepository.save(clinicMapper.toEntity(request)));
+        var schemaName = "clinic_" + clinic.getId();
         schemaProvisioningService.createTenantSchema(schemaName);
         try {
             TenantContext.setCurrentTenant(schemaName);
             return tx.execute(_ -> {
-                Role adminRole = roleRepository.findByName(ERole.ADMINISTRATOR)
-                        .orElseThrow(() -> new ResourceNotFoundException("Role ADMINISTRATOR not found"));
+                var adminRole = roleRepository.getByName(ERole.ADMINISTRATOR);
                 if(accountRepository.existsByEmail(request.adminEmail()))
-                    throw new ResourceNotFoundException("Account with email " + request.adminEmail() + " already exists");
-                Account account = accountRepository.save(Account.builder()
+                    throw new BadRequestException("Account with email " + request.adminEmail() + " already exists");
+                if(accountRepository.existsByCi(request.adminCi()))
+                    throw new BadRequestException("Account with email " + request.adminEmail() + " already exists");
+                var account = accountRepository.save(Account.builder()
                         .name(request.adminName())
                         .email(request.adminEmail())
-                        .ci(request.ci())
+                        .ci(request.adminCi())
                         .password(passwordEncoder.encode(request.adminPassword()))
                         .build());
-                Personal admin = personalRepository.save(Personal.builder()
+                var admin = personalRepository.save(Personal.builder()
                         .account(account)
                         .role(adminRole)
                         .build());
