@@ -60,18 +60,22 @@ public class PersonalServiceImpl implements PersonalService {
     @Override
     @Transactional
     public PersonalResponse createPersonal(PersonalRegisterRequest request) {
-        var role = getRoleOrThrowById(request.roleId());
-        var specialty = getSpecialtyOrThrowById(request.specialtyId());
         var personal = personalRepository.findByAccountCi(request.ci())
                 .orElseGet(() -> {
                     if(accountRepository.existsByEmailOrCi(request.email(), request.ci()))
                         throw new BadRequestException("Account with email " + request.email() + " or ci"+ request.ci() +" already exists");
                     return personalMapper.toEntity(request);
                 });
+
+        var role = getRoleOrThrowById(request.roleId());
+        if(!role.getName().equals(ERole.DOCTOR) && !role.getName().equals(ERole.RECEPTIONIST))
+            throw new ForbiddenException("Role " + role.getName() + " is not allowed to create personal");
         personal.setRole(role);
         personal.getAccount().setPassword(passwordEncoder.encode(request.password()));
-        if(role.getName().equals(ERole.DOCTOR))
-            personal.setSpecialty(specialty);
+        if(role.getName().equals(ERole.RECEPTIONIST) && request.specialtyId() != null)
+            throw new BadRequestException("Specialty is not permitted for this role");
+        var specialty = getSpecialtyOrThrowById(request.specialtyId());
+        personal.setSpecialty(specialty);
         return personalMapper.toResponse(personalRepository.save(personal));
     }
 
