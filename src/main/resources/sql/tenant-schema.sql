@@ -43,3 +43,11 @@ CREATE TABLE IF NOT EXISTS {schema}.doctor_patient (
     patient_id BIGINT NOT NULL REFERENCES {schema}.patients(id),
     PRIMARY KEY (doctor_id, patient_id)
 );
+
+INSERT INTO {schema}.specialties (id, name) VALUES (1, 'None') ON CONFLICT (id) DO NOTHING;;
+
+SELECT setval(
+    pg_get_serial_sequence('{schema}.specialties', 'id'),
+    (SELECT MAX(id) FROM {schema}.specialties),
+    true
+);

@@ -10,6 +10,7 @@ import com.example.scheduler.entity.Personal;
 import com.example.scheduler.entity.Role;
 import com.example.scheduler.entity.Specialty;
 import com.example.scheduler.enums.ERole;
+import com.example.scheduler.enums.ESpecialty;
 import com.example.scheduler.exception.BadRequestException;
 import com.example.scheduler.exception.ForbiddenException;
 import com.example.scheduler.exception.ResourceNotFoundException;
@@ -66,16 +67,18 @@ public class PersonalServiceImpl implements PersonalService {
                         throw new BadRequestException("Account with email " + request.email() + " or ci"+ request.ci() +" already exists");
                     return personalMapper.toEntity(request);
                 });
-
         var role = getRoleOrThrowById(request.roleId());
         if(!role.getName().equals(ERole.DOCTOR) && !role.getName().equals(ERole.RECEPTIONIST))
-            throw new ForbiddenException("Role " + role.getName() + " is not allowed to create personal");
+            throw new ForbiddenException("Role " + role.getName() + " is not allowed to create");
         personal.setRole(role);
         personal.getAccount().setPassword(passwordEncoder.encode(request.password()));
-        if(role.getName().equals(ERole.RECEPTIONIST) && request.specialtyId() != null)
-            throw new BadRequestException("Specialty is not permitted for this role");
-        var specialty = getSpecialtyOrThrowById(request.specialtyId());
-        personal.setSpecialty(specialty);
+        if(role.getName().equals(ERole.RECEPTIONIST)){
+            var specialty = specialtyRepository.getByName(ESpecialty.DEFAULT.getDisplayName());
+            personal.setSpecialty(specialty);
+        } else if(role.getName().equals(ERole.DOCTOR)) {
+            var specialty = getSpecialtyOrThrowById(request.specialtyId());
+            personal.setSpecialty(specialty);
+        }
         return personalMapper.toResponse(personalRepository.save(personal));
     }
 

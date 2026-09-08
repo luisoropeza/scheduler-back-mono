@@ -22,3 +22,8 @@ CREATE TABLE IF NOT EXISTS public.clinics (
     name VARCHAR(255) NOT NULL,
     phone_number VARCHAR(255) NOT NULL
 );
+
+INSERT INTO public.roles (id, name) VALUES (1, 'ADMINISTRATOR') ON CONFLICT (id) DO NOTHING;
+INSERT INTO public.roles (id, name) VALUES (2, 'DOCTOR') ON CONFLICT (id) DO NOTHING;
+INSERT INTO public.roles (id, name) VALUES (3, 'RECEPTIONIST') ON CONFLICT (id) DO NOTHING;
+INSERT INTO public.roles (id, name) VALUES (4, 'PATIENT')ON CONFLICT (id) DO NOTHING;

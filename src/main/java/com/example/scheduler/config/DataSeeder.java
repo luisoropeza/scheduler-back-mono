@@ -43,10 +43,10 @@ public class DataSeeder implements ApplicationRunner {
 
         String pwd = passwordEncoder.encode("password123");
 
-        Role admin = roleRepository.save(Role.builder().name(ERole.ADMINISTRATOR).build());
-        Role doctor = roleRepository.save(Role.builder().name(ERole.DOCTOR).build());
-        Role receptionist = roleRepository.save(Role.builder().name(ERole.RECEPTIONIST).build());
-        Role patient = roleRepository.save(Role.builder().name(ERole.PATIENT).build());
+        Role admin = roleRepository.getByName(ERole.ADMINISTRATOR);
+        Role doctor = roleRepository.getByName(ERole.DOCTOR);
+        Role receptionist = roleRepository.getByName(ERole.RECEPTIONIST);
+        Role patient = roleRepository.getByName(ERole.PATIENT);
 
         schemaProvisioningService.createTenantSchema("clinic_" + downtown.getId());
         schemaProvisioningService.createTenantSchema("clinic_" + uptown.getId());

@@ -18,5 +18,6 @@ public record PersonalRegisterRequest(
         String password,
         @NotNull
         Long roleId,
+        @NotNull
         Long specialtyId
 ) {}
