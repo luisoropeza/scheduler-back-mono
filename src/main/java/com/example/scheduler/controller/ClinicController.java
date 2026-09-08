@@ -29,7 +29,7 @@ public class ClinicController {
     }
 
     @PostMapping
-    @Operation(summary = "Register a new clinic and create its administrator account")
+    @Operation(summary = "Register a new clinic and create its administrator account (public)")
     public ResponseEntity<ClinicCreatedResponse> createClinic(@Valid @RequestBody ClinicRequest request) {
         return ResponseEntity.status(HttpStatus.CREATED).body(clinicService.createClinic(request));
     }

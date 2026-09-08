@@ -40,7 +40,7 @@ public class PersonalController {
         return ResponseEntity.ok(personalService.findAllDoctors(specialtyId, isActive, pageable));
     }
 
-    @GetMapping("/all")
+    @GetMapping
     @PreAuthorize("hasAnyRole('ADMINISTRATOR')")
     @Operation(summary = "GET /api/personal — list all personal, filter by ?specialtyId={specialtyId}&isActive={isActive}&role={role}")
     public ResponseEntity<Page<PersonalResponse>> findAllPersonal(
@@ -80,7 +80,7 @@ public class PersonalController {
         return ResponseEntity.ok(personalService.updatePersonalById(Long.parseLong(auth.getName()), request));
     }
 
-    @DeleteMapping("deactivate/{personalId}")
+    @DeleteMapping("/{personalId}")
     @PreAuthorize("hasAnyRole('ADMINISTRATOR')")
     @Operation(summary = "DELETE /api/personal/{personalId} — deactivate a personal by id")
     public ResponseEntity<Void> deactivatePersonalById(@PathVariable Long personalId) {

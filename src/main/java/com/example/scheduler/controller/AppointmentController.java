@@ -37,9 +37,8 @@ public class AppointmentController {
     @PostMapping
     @Operation(summary = "POST /api/appointments — book an appointment for a patient on a given schedule slot")
     public ResponseEntity<AppointmentResponse> bookAppointment(@Valid @RequestBody AppointmentRequest request, Authentication auth) {
-        if(SecurityUtils.extractRole(auth).equals(ERole.PATIENT.name())){
+        if(SecurityUtils.extractRole(auth).equals(ERole.PATIENT.name()))
             return ResponseEntity.status(HttpStatus.CREATED).body(appointmentService.bookAppointment(request, Long.parseLong(auth.getName())));
-        }
         return ResponseEntity.status(HttpStatus.CREATED).body(appointmentService.bookAppointment(request));
     }
 
@@ -59,13 +58,12 @@ public class AppointmentController {
             Authentication auth
     ) {
         var role = SecurityUtils.extractRole(auth);
-        if (role.equals(ERole.DOCTOR.name())){
-            return ResponseEntity.ok(appointmentService.findAllAppointments(Long.parseLong(auth.getName()), patientId, status, pageable));
-        }
-        if (role.equals(ERole.PATIENT.name())){
-            return ResponseEntity.ok(appointmentService.findAllAppointments(doctorId, Long.parseLong(auth.getName()), status, pageable));
-        }
-        return ResponseEntity.ok(appointmentService.findAllAppointments(doctorId, patientId, status, pageable));
+        return ResponseEntity.ok(appointmentService.findAllAppointments(
+                role.equals(ERole.DOCTOR.name())? Long.parseLong(auth.getName()) : doctorId,
+                role.equals(ERole.PATIENT.name())? Long.parseLong(auth.getName()) : patientId,
+                status,
+                pageable)
+        );
     }
 
     @PatchMapping("/{appointmentId}/confirm")
@@ -98,13 +96,12 @@ public class AppointmentController {
             @RequestParam(required = false) Long patientId,
             Authentication auth) {
         var role = SecurityUtils.extractRole(auth);
-        if (role.equals(ERole.DOCTOR.name())){
-            return ResponseEntity.ok(appointmentService.getBoardByRange(from, to, Long.parseLong(auth.getName()), patientId));
-        }
-        if (role.equals(ERole.PATIENT.name())){
-            return ResponseEntity.ok(appointmentService.getBoardByRange(from, to, doctorId, Long.parseLong(auth.getName())));
-        }
-        return ResponseEntity.ok(appointmentService.getBoardByRange(from, to, doctorId, patientId));
+        return ResponseEntity.ok(appointmentService.getBoardByRange(
+                from,
+                to,
+                role.equals(ERole.DOCTOR.name())? Long.parseLong(auth.getName()) : doctorId,
+                role.equals(ERole.PATIENT.name())? Long.parseLong(auth.getName()) : patientId)
+        );
     }
 
     @GetMapping("/calendar")
@@ -116,12 +113,11 @@ public class AppointmentController {
             @RequestParam(required = false) Long patientId,
             Authentication auth) {
         var role = SecurityUtils.extractRole(auth);
-        if (role.equals(ERole.DOCTOR.name())){
-            return ResponseEntity.ok(appointmentService.getCalendar(month, year, Long.parseLong(auth.getName()), patientId));
-        }
-        if (role.equals(ERole.PATIENT.name())){
-            return ResponseEntity.ok(appointmentService.getCalendar(month, year, doctorId, Long.parseLong(auth.getName())));
-        }
-        return ResponseEntity.ok(appointmentService.getCalendar(month, year, doctorId, patientId));
+        return ResponseEntity.ok(appointmentService.getCalendar(
+                month,
+                year,
+                role.equals(ERole.DOCTOR.name())? Long.parseLong(auth.getName()) : doctorId,
+                role.equals(ERole.PATIENT.name())? Long.parseLong(auth.getName()) : patientId)
+        );
     }
 }
