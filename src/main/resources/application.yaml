@@ -33,7 +33,7 @@ spring:
       chat: google-genai
     google:
       genai:
-        api-key: ${GEMINI_API_KEY:AQ.Ab8RN6LchOvlD-O0BOiOGc-z9Qo030kr_RsnKV80Ro-yp_xpeg}
+        api-key: ${GEMINI_API_KEY:}
         chat:
           model: gemini-3.5-flash-lite
 
