@@ -28,6 +28,19 @@ spring:
           starttls:
             enable: true
             required: true
+  ai:
+    model:
+      chat: google-genai
+    google:
+      genai:
+        api-key: ${GEMINI_API_KEY:AQ.Ab8RN6LchOvlD-O0BOiOGc-z9Qo030kr_RsnKV80Ro-yp_xpeg}
+        chat:
+          model: gemini-3.5-flash-lite
+
+twilio:
+  account-sid: "TU_ACCOUNT_SID"
+  auth-token: "TU_AUTH_TOKEN"
+  whatsapp-number: "whatsapp:+14155238886"
 
 logging:
   level:

@@ -10,6 +10,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
 
 public interface ScheduleRepository extends JpaRepository<Schedule, Long> {
@@ -27,6 +28,18 @@ public interface ScheduleRepository extends JpaRepository<Schedule, Long> {
             @Param("status") ScheduleStatus status,
             @Param("after") LocalDateTime after,
             Pageable pageable
+    );
+
+    @Query("SELECT s FROM Schedule s " +
+            "JOIN FETCH s.doctor d " +
+            "JOIN FETCH d.specialty p  " +
+            "JOIN FETCH d.account a WHERE" +
+            "(:doctorId IS NULL OR d.id = :doctorId) AND " +
+            "(cast(:after as localdatetime) IS NULL OR s.startTime > :after) AND " +
+            "(s.status = ScheduleStatus.AVAILABLE)")
+    List<Schedule> findAllSchedulesAvailable(
+            @Param("doctorId") Long doctorId,
+            @Param("after") LocalDateTime after
     );
 
     @EntityGraph(attributePaths = {"doctor.specialty", "doctor.account"})

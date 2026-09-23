@@ -58,9 +58,25 @@ public class AppointmentController {
             Authentication auth
     ) {
         var role = SecurityUtils.extractRole(auth);
+        if(role.equals(ERole.DOCTOR.name())){
+            return ResponseEntity.ok(appointmentService.findAllAppointments(
+                    Long.parseLong(auth.getName()),
+                    patientId,
+                    status,
+                    pageable)
+            );
+        }
+        if(role.equals(ERole.PATIENT.name())){
+            return ResponseEntity.ok(appointmentService.findAllAppointments(
+                    doctorId,
+                    Long.parseLong(auth.getName()),
+                    status,
+                    pageable)
+            );
+        }
         return ResponseEntity.ok(appointmentService.findAllAppointments(
-                role.equals(ERole.DOCTOR.name())? Long.parseLong(auth.getName()) : doctorId,
-                role.equals(ERole.PATIENT.name())? Long.parseLong(auth.getName()) : patientId,
+                doctorId,
+                patientId,
                 status,
                 pageable)
         );
@@ -96,11 +112,27 @@ public class AppointmentController {
             @RequestParam(required = false) Long patientId,
             Authentication auth) {
         var role = SecurityUtils.extractRole(auth);
+        if(role.equals(ERole.DOCTOR.name())){
+            return ResponseEntity.ok(appointmentService.getBoardByRange(
+                    from,
+                    to,
+                    Long.parseLong(auth.getName()),
+                    patientId)
+            );
+        }
+        if(role.equals(ERole.PATIENT.name())){
+            return ResponseEntity.ok(appointmentService.getBoardByRange(
+                    from,
+                    to,
+                    doctorId,
+                    Long.parseLong(auth.getName()))
+            );
+        }
         return ResponseEntity.ok(appointmentService.getBoardByRange(
                 from,
                 to,
-                role.equals(ERole.DOCTOR.name())? Long.parseLong(auth.getName()) : doctorId,
-                role.equals(ERole.PATIENT.name())? Long.parseLong(auth.getName()) : patientId)
+                doctorId,
+                patientId)
         );
     }
 
@@ -113,11 +145,27 @@ public class AppointmentController {
             @RequestParam(required = false) Long patientId,
             Authentication auth) {
         var role = SecurityUtils.extractRole(auth);
+        if(role.equals(ERole.DOCTOR.name())){
+            return ResponseEntity.ok(appointmentService.getCalendar(
+                    month,
+                    year,
+                    Long.parseLong(auth.getName()),
+                    patientId)
+            );
+        }
+        if(role.equals(ERole.PATIENT.name())){
+            return ResponseEntity.ok(appointmentService.getCalendar(
+                    month,
+                    year,
+                    doctorId,
+                    Long.parseLong(auth.getName()))
+            );
+        }
         return ResponseEntity.ok(appointmentService.getCalendar(
                 month,
                 year,
-                role.equals(ERole.DOCTOR.name())? Long.parseLong(auth.getName()) : doctorId,
-                role.equals(ERole.PATIENT.name())? Long.parseLong(auth.getName()) : patientId)
+                doctorId,
+                patientId)
         );
     }
 }

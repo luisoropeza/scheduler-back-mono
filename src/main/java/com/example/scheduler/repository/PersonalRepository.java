@@ -9,6 +9,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.util.List;
 import java.util.Optional;
 
 public interface PersonalRepository extends JpaRepository<Personal, Long> {
@@ -20,6 +21,15 @@ public interface PersonalRepository extends JpaRepository<Personal, Long> {
             "(:specialtyId IS NULL OR s.id = :specialtyId) AND " +
             "(:isActive IS NULL OR p.active = :isActive)")
     Page<Personal> findAllDoctorsByFilters(@Param("specialtyId") Long specialtyId, @Param("isActive") Boolean isActive, Pageable pageable);
+
+    @Query("SELECT p FROM Personal p " +
+            "JOIN FETCH p.account a " +
+            "JOIN FETCH p.role r " +
+            "JOIN FETCH p.specialty s " +
+            "WHERE r.name = ERole.DOCTOR AND " +
+            "p.active = true AND " +
+            "(:specialtyId IS NULL OR s.id = :specialtyId)")
+    List<Personal> findAllDoctorsActive(@Param("specialtyId") Long specialtyId);
 
     @Query("SELECT p FROM Personal p " +
             "JOIN FETCH p.account a " +
