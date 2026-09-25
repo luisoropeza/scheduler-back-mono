@@ -45,7 +45,7 @@ public class DataSeeder implements ApplicationRunner {
 
         Role admin = roleRepository.getByName(ERole.ADMINISTRATOR);
         Role doctor = roleRepository.getByName(ERole.DOCTOR);
-        Role receptionist = roleRepository.getByName(ERole.RECEPTIONIST);
+        Role assistant = roleRepository.getByName(ERole.ASSISTANT);
         Role patient = roleRepository.getByName(ERole.PATIENT);
 
         schemaProvisioningService.createTenantSchema("clinic_" + downtown.getId());
@@ -55,14 +55,14 @@ public class DataSeeder implements ApplicationRunner {
 
         try {
             TenantContext.setCurrentTenant("clinic_" + downtown.getId());
-            transactionTemplate.executeWithoutResult(_ -> seedDowntown(admin, doctor, receptionist, patient, pwd));
+            transactionTemplate.executeWithoutResult(_ -> seedDowntown(admin, doctor, assistant, patient, pwd));
         } finally {
             TenantContext.clear();
         }
 
         try {
             TenantContext.setCurrentTenant("clinic_" + uptown.getId());
-            transactionTemplate.executeWithoutResult(_ -> seedUptown(admin, doctor, receptionist, patient, pwd));
+            transactionTemplate.executeWithoutResult(_ -> seedUptown(admin, doctor, assistant, patient, pwd));
         } finally {
             TenantContext.clear();
         }
